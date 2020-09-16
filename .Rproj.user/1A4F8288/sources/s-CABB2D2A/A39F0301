@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1576942501679.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3355716510",
+    "id" : "A39F0301",
+    "lastKnownWriteTime" : 1600227643,
+    "last_content_update" : 1600227643848,
+    "path" : "~/temp/Data_Analysis/Andile/CAP083_16S/cytokines_all_visits.Rmd",
+    "project_path" : "cytokines_all_visits.Rmd",
+    "properties" : {
+        "cursorPosition" : "162,0",
+        "scrollLine" : "148"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

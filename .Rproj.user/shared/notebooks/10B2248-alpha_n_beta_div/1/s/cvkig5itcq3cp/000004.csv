@@ -1,0 +1,13 @@
+"0","sd <- data.frame(sample_data(ps2.v1v2v3.glom.species.ra))"
+"0","ggpaired(sd, x = ""VisitCode"", y = ""ShannonLgT"","
+"0","         color = ""VisitCode"", line.color = ""gray"", line.size = 0.4,"
+"0","         palette = visitsPallet, id = ""ParticipantID"", width = 0.1 ) +"
+"0","  scale_x_discrete(breaks=c(1000, 1020, 1030), labels=c(""Baseline"", ""Visit 2"", ""Visit 3"")) +"
+"0","  scale_color_discrete(name = ""Clinical Visits"", labels = c(""Baseline"", ""Visit 2"", ""Visit 3"")) +"
+"0","  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +"
+"0","  theme_light() +"
+"0","  ylab(""Shannon Diversity"") +"
+"0","  xlab(""Clinical Visits"") +"
+"0","  stat_compare_means(paired = TRUE)"
+"2","Scale for 'colour' is already present. Adding another scale for 'colour', which will replace the existing scale.
+"

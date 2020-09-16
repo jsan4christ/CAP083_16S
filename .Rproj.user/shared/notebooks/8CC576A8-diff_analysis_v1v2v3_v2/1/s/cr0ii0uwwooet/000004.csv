@@ -1,0 +1,2 @@
+"0","res4<-rcorr(as.matrix(dt.ps2.persisted.cyto.otu))"
+"0","flattenCorrMatrix(res4$r, res4$P)"

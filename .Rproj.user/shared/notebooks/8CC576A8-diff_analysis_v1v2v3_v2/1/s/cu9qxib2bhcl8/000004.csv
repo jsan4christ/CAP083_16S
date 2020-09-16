@@ -1,0 +1,3 @@
+"0","# Silhouette method"
+"0","fviz_nbclust(dist_obj, kmeans, method = ""silhouette"")+"
+"0","  labs(subtitle = ""Silhouette method"")"

@@ -1,0 +1,115 @@
+"0","# Set up required packages"
+"0",".cran_packages <- c(""igraph"", ""markovchain"", ""dunn.test"")"
+"0",".bioc_packages <- c()"
+"0",".inst <- .cran_packages %in% installed.packages()"
+"0","if(any(!.inst)) {"
+"0","  install.packages(.cran_packages[!.inst])"
+"0","}"
+"0",".inst <- .bioc_packages %in% installed.packages()"
+"0","if(any(!.inst)) {"
+"0","  source(""http://bioconductor.org/biocLite.R"")"
+"0","  biocLite(.bioc_packages[!.inst], ask = F)"
+"0","}"
+"0","# Load packages into session, and print package version"
+"0","sapply(c(.cran_packages, .bioc_packages), require, character.only = TRUE)"
+"2","Loading required package: igraph
+"
+"2","package ‘igraph’ was built under R version 3.5.2"
+"2","
+Attaching package: ‘igraph’
+
+"
+"2","The following objects are masked from ‘package:DelayedArray’:
+
+    path, simplify
+
+"
+"2","The following object is masked from ‘package:GenomicRanges’:
+
+    union
+
+"
+"2","The following object is masked from ‘package:IRanges’:
+
+    union
+
+"
+"2","The following object is masked from ‘package:S4Vectors’:
+
+    union
+
+"
+"2","The following objects are masked from ‘package:BiocGenerics’:
+
+    normalize, path, union
+
+"
+"2","The following object is masked from ‘package:expss’:
+
+    %u%
+
+"
+"2","The following object is masked from ‘package:plotly’:
+
+    groups
+
+"
+"2","The following object is masked from ‘package:vegan’:
+
+    diversity
+
+"
+"2","The following object is masked from ‘package:permute’:
+
+    permute
+
+"
+"2","The following objects are masked from ‘package:dplyr’:
+
+    as_data_frame, groups, union
+
+"
+"2","The following objects are masked from ‘package:purrr’:
+
+    compose, simplify
+
+"
+"2","The following object is masked from ‘package:tidyr’:
+
+    crossing
+
+"
+"2","The following object is masked from ‘package:tibble’:
+
+    as_data_frame
+
+"
+"2","The following objects are masked from ‘package:stats’:
+
+    decompose, spectrum
+
+"
+"2","The following object is masked from ‘package:base’:
+
+    union
+
+"
+"2","Loading required package: markovchain
+"
+"2","package ‘markovchain’ was built under R version 3.5.2"
+"2","Package:  markovchain
+Version:  0.6.9.14
+Date:     2019-01-20
+BugReport: http://github.com/spedygiorgio/markovchain/issues
+
+"
+"1","     igraph "
+"1","markovchain "
+"1","  dunn.test "
+"1","
+"
+"1","       TRUE "
+"1","       TRUE "
+"1","       TRUE "
+"1","
+"

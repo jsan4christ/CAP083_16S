@@ -1,0 +1,4 @@
+"0","## Set global ggplot2 theme and options"
+"0","# Set global theming"
+"0","# This theme set will change the ggplot2 defaults to use the b&w settings (removes the default gray background) and sets the default font to 12pt Arial"
+"0","theme_set(theme_bw(base_size = 12))"

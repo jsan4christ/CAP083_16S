@@ -1,0 +1,447 @@
+---
+title: "Andile Analysis"
+author: "San Emmanuel James"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: true
+    theme: united
+    code_folding: hide
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=8,
+                      fig.height=6,
+                      fig.path="results/graphs/",
+                      dev='png',
+                      warning=FALSE,
+                      message=FALSE,
+                      echo = TRUE,
+                      include = TRUE
+                      )
+options(scipen=2000) ##Penalty for scientific notation
+```
+
+# Introduction
+The goals of this analysis are to;  
+a) Characterise the genital microbiome in women,   
+b) Assess the impact of STIs and vaginal disybiosis on the on this microbiome  
+c) Assess the impact of STI treatment on subsequent visits on the microbiome  
+d) To a lesser extent assess the correlation of CSTs with pro-inflammatory cytokines  
+
+To answer these questions, data accross three time points was collected from upto 244 HIV negative women. All women who presented with BV and/or STIs at visit1 were treated with antibiotics and sheduled for a second and third review visit. At the visits, pro-inflammatory cytokines were extracted using soft-cup and bacterial DNA using a vaginal swab.
+
+## Part A: Characterisation of female genital tract microbiome
+What is the distribution of bacteria in these women? is there any form of clustering?
+
+## Key results
+* 4 major CSTs identified, with a dominance of Lactobacillus inners among the health women and Gardinarrela vaginalis among the BV affected women.  
+* The four CSTs are broken down as below;  
+  CT1 - Crispatus  
+  CT2 - Inners  
+  CT3 - Multiple species (no single dominant species)  
+  CT4 - Gardarnela (also dominated by BV)  
+* Significantly associated with BV and STIs especially gonorrhea.  
+
+```{r initiate-environment, warning=FALSE, include=FALSE}
+### Load packages
+
+#Load packages and functions required packages for the analysis
+# Set up required packages
+.cran_packages <- c("knitr", "gridExtra", "grid", "tidyverse", "vegan", "ggplot2", "data.table", "RColorBrewer", "plotly", "expss", "data.table", "stringi","VennDiagram")
+.bioc_packages <- c("dada2", "phyloseq", "DESeq2")
+
+.inst <- .cran_packages %in% installed.packages()
+if(any(!.inst)) {
+  install.packages(.cran_packages[!.inst])
+}
+.inst <- .bioc_packages %in% installed.packages()
+if(any(!.inst)) {
+  source("http://bioconductor.org/biocLite.R")
+  biocLite(.bioc_packages[!.inst], ask = F)
+}
+# Load packages into session, and print package version
+sapply(c(.cran_packages, .bioc_packages), require, character.only = TRUE)
+
+#Load custom functions
+source(paste0("Scripts/", "custom_microbiome_functions.R"))
+source("scripts/load-extra-functions.R")
+
+```
+
+
+```{r global-theme-settings, include=FALSE}
+## Set global ggplot2 theme and options
+# Set global theming
+# This theme set will change the ggplot2 defaults to use the b&w settings (removes the default gray background) and sets the default font to 12pt Arial
+theme_set(theme_bw(base_size = 12))
+
+```
+
+```{r declare-global-vars}
+## CSTs custom color color pallete
+CSTs_all <- c("I", "II", "III",  "IV-A", "IV-B", "IV-C", "V")
+CSTsPallete <- c("#7CAE00", "#ff0033", "#C77CFF",  "#ff33cc", "#6699CC", "pink", "blue") # "purple", "orange"
+CSTsPalleteNamed <- c("#7CAE00", "#ff0033", "#C77CFF",  "#ff33cc", "#6699CC", "#ff0066", "#ff9900")
+names(CSTsPalleteNamed) <- CSTs_all
+CSTsPalleteValues <- c("I"="#7CAE00", "II"="#ff0033", "III"="#C77CFF",  "IV-A"="#ff33cc", "IV-B"="#6699CC", "IV-C"="#ff0066", "V"="#ff9900")
+
+visitsPallet <- c("lightskyblue4", "red", "lightskyblue")
+proInfC <- c("TNF.b"  , "IL.12p40" , "IL.12p70" , "IL.1a" , "IL.6" , "TNF.a" , "IL.1b", "IL.18" , "MIF" , "TRAIL")
+
+allCytokineColnames <- c("IL.1a","IL.1b","IL.6","IL.12p40","IL.12p70","IL.18", "MIF","TNF.a","TNF.b","TRAIL","IL.8","IL.16","CTACK","Eotaxin","IP.10","IFN.a2","GROa","MCP.1","MCP.3","MIG","MIP.1a", "MIP.1b","RANTES","IL.3","IL.7",  "IL.9","b.NGF","FGF.basic","G.CSF","GM.CSF",  "HGF", "LIF","M.CSF", "PDGF.bb", "SCF","SCGF.b", "SDF.1a", "VEGF","IL.2Ra", "IL.2",  "IL.4", "IL.5","IL.13","IL.15","IL.17","IFN.g","IL.1ra", "IL.10")
+## 
+
+```
+
+# Read in and preprocess data
+
+Read in data, prepare for analysis and perform sanity checks
+
+```{r import-data}
+#Read in data
+
+#tax table
+tax_tab <- data.frame(readRDS("dada2-Chimera-Taxonomy/tax_table_final.RDS"))
+tax_tab$Species <- as.character(tax_tab$Species)
+
+## Use precise taxonomy
+tax_tab[tax_tab$Species %in% "Lactobacillus_crispatus_Lactobacillus_helveticus", "Species"] <- "Lactobacillus_crispatus"
+tax_tab[tax_tab$Species %in% "Lactobacillus_acidophilus", "Species"] <- "Lactobacillus_crispatus"
+tax_tab[tax_tab$Species %in% "Lactobacillus_gasseri_Lactobacillus_johnsonii", "Species"] <- "Lactobacillus_gasseri"
+tax_tab[tax_tab$Species %in% "Prevotella_timonensis", "Species"] <- "Prevotella_bivia"
+
+tax_tab$Species <- dplyr::case_when(substr(tax_tab$Species,1,2) %in% "d_" ~ tax_tab$Species,
+                                    substr(tax_tab$Species,1,2) %in% "p_" ~ tax_tab$Species,
+                                    substr(tax_tab$Species,1,2) %in% "c_" ~ tax_tab$Species,
+                                    substr(tax_tab$Species,1,2) %in% "f_" ~ tax_tab$Species,
+                                    substr(tax_tab$Species,1,2) %in% "o_" ~ tax_tab$Species,
+                                    substr(tax_tab$Species,1,2) %in% "g_" ~ tax_tab$Species,
+                                    TRUE  ~ gsub("_", " ", tax_tab$Species))
+
+tax_tab <- tax_table(as.matrix(tax_tab))
+
+## Import sample data
+mapping.data <- readRDS("processed/sample_data.RDS")
+rownames(mapping.data) <- mapping.data$SampleID
+
+## Import pecan csts
+pecan_csts <- readRDS("metadata/metadata_cst.RDS")
+rownames(pecan_csts) <- pecan_csts$SampleID
+
+## Add pecan csts to sample data
+mapping.data_ <- inner_join(mapping.data, pecan_csts[, c(1,15:18)], by = "SampleID")
+dim(mapping.data_)
+rownames(mapping.data_) <- mapping.data_$SampleID
+
+## Import Otu table
+otu_tab <- readRDS("dada2-Chimera-Taxonomy/seqtab_final.RDS")
+class(otu_tab) <- "numeric"
+
+## Phylogenetic tree
+phy <- readRDS("dada2-Phangorn/phangorn.tree.RDS")
+
+## Create phyloseq object
+ps00 <- phyloseq(tax_table(tax_tab), otu_table(otu_tab, taxa_are_rows = F), phy_tree(phy$tree))
+ps00
+
+## Now prune extra samples not used from sample data
+ps0 <- prune_samples(mapping.data$SampleID, ps00)
+ps0 <- prune_taxa(taxa_sums(ps0) > 0, ps0)
+ps0
+
+## Add metadata to phyloseq object
+sample_data(ps0) <- mapping.data_
+ps0
+
+## Perform a few sanity checks. Results should match what is expected.
+# sample_variables(ps0) # Display variables from the mapping file
+cat("Total number of taxa in the entire dataset\n", ntaxa(ps0)) 
+cat("Total number of samples \n", nsamples(ps0))
+# rank_names(ps0) # Taxonomic ranks to confirm proper naming otherwise, correct
+# colnames(tax_table(ps0)) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "Strain")
+
+```
+
+## Filter out taxa without Phylum
+
+Taxa without assignment at the Phylumn level are likely spurious and will not be relevant in the downstream analyses so dropping those. In this case we filter out the 'NA's and ""s.
+```{r taxa-without-phylum-level-assignment, echo=TRUE}
+
+#Phylum in our data and sample counts at these phylum. Notice <NA>, samples not assigned to any phylum. We remove these
+get_taxa_unique(ps0, "Phylum")
+
+#Determine taxa without Phylum assignment
+cat("Taxa distribution by Phylum")
+table(tax_table(ps0)[, "Phylum", exclude = NULL])
+ps0.Phylum <- subset_taxa(ps0, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized"))
+table(tax_table(ps0.Phylum)[, "Phylum"], exclude = NULL)
+
+# Remove taxa that is not present in any sample (keep only those assigned at least one sample)
+
+# summary(taxa_sums(ps0.Phylum))
+ps0.Phylum <- prune_taxa(taxa_sums(ps0.Phylum) > 0, ps0.Phylum)
+
+cat("\nTaxa Summary after filtering out 0 read count taxa\n")
+summary(taxa_sums(ps0.Phylum))
+
+# How many Phylum would be present after filtering?
+cat("\nNumber of unique pylum remaining after filtering:\n", length(get_taxa_unique(ps0.Phylum, taxonomic.rank = "Phylum")))
+
+```
+
+
+### Filter out non-bacterial taxa
+
+Sample preparation and handling can introduce contamination (non-bacterial DNA). We need to check for and remove all this DNA from the remaining samples.
+
+```{r filter-non-bacteria, echo=TRUE}
+# Some examples of taxa you may not want to include in your analysis
+get_taxa_unique(ps0.Phylum, "Kingdom")
+get_taxa_unique(ps0.Phylum, "Phylum")
+
+ps0.Phylum # Check the number of taxa prior to removal
+ps0.phylum.bact <- ps0.Phylum %>%
+  subset_taxa(
+    Kingdom == "Bacteria" &
+    Family  != "mitochondria" &
+    Class   != "Chloroplast" & 
+    Phylum != "Cyanobacteria"
+  )
+ps0.phylum.bact # Confirm that the taxa were removed
+get_taxa_unique(ps0.phylum.bact, "Kingdom")
+get_taxa_unique(ps0.phylum.bact, "Class")
+
+```
+
+### Prevalance assessment*
+
+Plot Phyla present along with information about their prevalence (i.e. fraction of samples they are present in) and total abundance accross samples. Dashed horizontal line to show the 5% margin at which we intend to filter.
+
+```{r prevalence-assessment, echo=TRUE}
+## Prevalence estimation
+# Calculate feature prevalence across the data set. i.e all the samples in which an ASV is found
+df.ps0.prevalence <- apply(X = otu_table(ps0.phylum.bact), MARGIN = ifelse(taxa_are_rows(ps0.phylum.bact), yes = 1, no = 2), FUN = function(x){sum(x > 0)})
+ 
+# Add taxonomy and total read counts (all sequences from a sample) to df.prevalence
+df.ps0.prevalence <- data.frame(Prevalence = df.ps0.prevalence, TotalAbundance = taxa_sums(ps0.phylum.bact), tax_table(ps0.phylum.bact))
+message("Prevalence range (min max): ", min(df.ps0.prevalence$Prevalence), max(df.ps0.prevalence$Prevalence), "\n")
+message("Prevalence Summary Stats: ", summary(df.ps0.prevalence$Prevalence), "\n")
+
+#Prevalence plot
+df.ps0.prevalence.phylum <- subset(df.ps0.prevalence, Phylum %in% get_taxa_unique(ps0.phylum.bact, "Phylum"))
+gg.ps0.prevalence <- ggplot(df.ps0.prevalence.phylum, aes(TotalAbundance, Prevalence / nsamples(ps0.phylum.bact), color=Family)) +
+  geom_hline(yintercept = 0.01, alpha = 0.8, linetype = 2) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_x_log10() +
+  xlab("Total Abundance") + ylab("Prevalence [Frac. Samples]") +
+  facet_wrap(~Phylum) +
+  theme(legend.position="none") +
+  ggtitle("Phylum Prevalence in All Samples\nColored by Family")
+gg.ps0.prevalence
+#ggplotly(gg.ps1.prevalence)
+
+plyr::ddply(df.ps0.prevalence, "Phylum", function(df1){
+  data.frame(mean_prevalence=mean(df1$Prevalence),total_abundance=sum(df1$TotalAbundance,na.rm = T),stringsAsFactors = F)
+  })
+
+```
+
+### Prevalence Filtering,
+
+The data is already filtered at 5% prevalence. This step is therefore only activated as need arises for filtering. 
+
+```{r prevelance-filtering, echo=TRUE}
+prevalenceThreshold = 0.01 * nsamples(ps0.phylum.bact)
+cat("Prevalence threshold:\n\n")
+prevalenceThreshold
+
+# Define which taxa fall within the prevalence threshold
+keepTaxa <- rownames(df.ps0.prevalence.phylum)[(df.ps0.prevalence.phylum$Prevalence >= prevalenceThreshold)]
+cat("\n\nTax meeting prevalence threshold:\n\n")
+length(keepTaxa)
+
+cat("\n\nTax meeting prevalence threshold:\n\n")
+ntaxa(ps0.phylum.bact)
+# Remove those taxa
+ps1 <- prune_taxa(keepTaxa, ps0.phylum.bact)
+ntaxa(ps1)
+
+# Calculate feature prevalence across the data set. i.e all the samples in which an ASV is found
+df.ps1.prevalence <- apply(X = otu_table(ps1), MARGIN = ifelse(taxa_are_rows(ps1), yes = 1, no = 2), FUN = function(x){sum(x > 0)})
+
+# Add taxonomy and total read counts (all sequences from a sample) to df.prevalence
+df.ps1.prevalence <- data.frame(Prevalence = df.ps1.prevalence, TotalAbundance = taxa_sums(ps1), tax_table(ps1))
+message("Prevalence range (min max): ", min(df.ps1.prevalence$Prevalence), max(df.ps1.prevalence$Prevalence), "\n")
+message("Prevalence Summary Stats: ", summary(df.ps1.prevalence$Prevalence), "\n")
+
+#Prevalence plot
+df.ps1.prevalence.phylum <- subset(df.ps1.prevalence, Phylum %in% get_taxa_unique(ps1, "Phylum"))
+gg.ps1.prevalence <- ggplot(df.ps1.prevalence.phylum, aes(TotalAbundance, Prevalence / nsamples(ps1), color=Family)) +
+  geom_hline(yintercept = 0.01, alpha = 0.8, linetype = 2) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_x_log10() +
+  xlab("Total Abundance") + ylab("Prevalence [Frac. Samples]") +
+  facet_wrap(~Phylum) +
+  theme(legend.position="none") +
+  ggtitle("Phylum Prevalence in All Samples\nColored by Family")
+gg.ps1.prevalence
+#ggplotly(gg.ps1.prevalence)
+
+plyr::ddply(df.ps1.prevalence, "Phylum", function(df1){
+  data.frame(mean_prevalence=mean(df1$Prevalence),total_abundance=sum(df1$TotalAbundance,na.rm = T),stringsAsFactors = F)
+  })
+```
+
+## Create or reorder factors
+
+Create factor variables for downstream analyses
+```{r echo=TRUE}
+
+cat("Reorder BV score levels such that negative comes first.\n")
+levels(sample_data(ps1)$bvscat)
+sample_data(ps1)$bvscat <- factor(sample_data(ps0.phylum.bact)$bvscat, levels = c("Negative" , "Intermediate", "BV"))
+levels(sample_data(ps1)$bvscat)
+
+#Create/convert STD information to factor
+sample_data(ps1)$STI <- as.factor(sample_data(ps1)$STI)
+sample_data(ps1)$Inflammation <- as.factor(sample_data(ps1)$Inflammation)
+sample_data(ps1)$Chlamydia <- as.factor(sample_data(ps1)$Chlamydia)
+sample_data(ps1)$Gonorrhoea <- as.factor(sample_data(ps1)$Gonorrhoea)
+sample_data(ps1)$Trichomoniasis <- as.factor(sample_data(ps1)$Trichomoniasis)
+sample_data(ps1)$Candidiasis <- as.factor(sample_data(ps1)$Candidiasis)
+sample_data(ps1)$PSA <- as.factor(sample_data(ps1)$PSA)
+sample_data(ps1)$`HSV.1` <- as.factor(sample_data(ps1)$`HSV.1`)
+sample_data(ps1)$`HSV.2` <- as.factor(sample_data(ps1)$`HSV.2`)
+sample_data(ps1)$sim_CST <- factor(sample_data(ps1)$sim_CST,  levels = c("I", "II", "III",  "IV-A", "IV-B", "IV-C", "V"))
+sample_data(ps1)$sim_subCST <- as.factor(sample_data(ps1)$sim_subCST)
+
+```
+
+
+## Subset Samples with visits at all 3 time points
+```{r}
+
+## Create dataset of participants followed accross all three visits
+
+#Extract sample data
+sample.data.ps1 <- data.frame(sample_data(ps1))
+
+#Get visit 2 and 3 ids
+visit1.ids <- sample.data.ps1 %>% subset(VisitCode == 1000) %>% pull('ParticipantID')
+visit1.ids <- visit1.ids[!visit1.ids %in% c(120117, 120016, 120060, 120221, 120229, 120223, 120010)]
+visit2.ids <- sample.data.ps1 %>% subset(VisitCode == 1020) %>% pull('ParticipantID') 
+visit3.ids <- sample.data.ps1 %>% subset(VisitCode == 1030) %>% pull('ParticipantID')
+
+#IDs of followed samples
+ids.v2.not.in.v1 <-  subset(visit2.ids, !visit2.ids %in% visit1.ids)
+ids.v2.not.in.v3 <-  subset(visit2.ids, !visit2.ids %in% visit3.ids)
+ids.v3.not.in.v1 <-  subset(visit3.ids, !visit3.ids %in% visit1.ids)
+ids.v3.not.in.v2 <-  subset(visit3.ids, !visit3.ids %in% visit2.ids)
+
+
+#All missing visit 1 from visit 2 and 3
+ids.missing.visit1  <-  c(ids.v2.not.in.v1, ids.v3.not.in.v1)
+
+all.missing <- unique(c(ids.missing.visit1, ids.v3.not.in.v2, ids.v2.not.in.v3))
+
+ids.followed.v2v3 <- unique(c(visit2.ids, visit3.ids))
+
+#visit 1, 2 and 3 intersections
+v1v2.ids <- unique(subset(sample.data.ps1, ParticipantID %in% visit1.ids & ParticipantID %in% visit2.ids) %>% 
+                      pull('ParticipantID'))
+v1v3.ids <- unique(subset(sample.data.ps1, ParticipantID %in% visit1.ids & ParticipantID %in% visit3.ids) %>% 
+                      pull('ParticipantID'))
+v2v3.ids <- unique(subset(sample.data.ps1, ParticipantID %in% visit2.ids & ParticipantID %in% visit3.ids) %>% 
+                      pull('ParticipantID'))
+
+##Get dataset with followed samples
+ps2.v1v2v3 <- subset_samples(ps1, (sample_data(ps1)$ParticipantID %in% ids.followed.v2v3 & 
+                               !sample_data(ps1)$ParticipantID %in% all.missing))
+ps2.v1v2v3
+
+#Samples followed through the 3 times
+ps2.v1v2v3.ids <- unique(sample_data(ps2.v1v2v3)$ParticipantID)
+saveRDS(ps2.v1v2v3.ids, "results/v1v2v3-ids.txt")
+
+sample_data(ps2.v1v2v3)$VisitCode <- factor(sample_data(ps2.v1v2v3)$VisitCode, levels = c(1000, 1020, 1030))
+
+#IDs present in visit 1, 2 and 3
+ids.followed.v1v2v3 <- unique(sample_data(ps2.v1v2v3)$ParticipantID)
+ids.followed.v1v2v3 <- c(ids.followed.v1v2v3) #Plus non bv ids
+
+#Draw venn diagram of visit distribution 
+draw.triple.venn(area1 = length(visit1.ids), area2 = length(visit2.ids), area3 = length(visit3.ids), n12 = length(v1v2.ids), n23 = length(v2v3.ids), n13 =length(v1v3.ids), n123 = length(ids.followed.v1v2v3), category = c("Visit1", "Visit2", "Visit3"), lty = "blank", fill = c("skyblue", "pink1", "mediumorchid"), cex=2, cat.cex = 2, cat.fontfamily = rep("serif", 3))
+
+sample_data(ps2.v1v2v3)$bv.persisted <- 0
+sample_data(ps2.v1v2v3)$bv.recurred  <- 0
+sample_data(ps2.v1v2v3)$bv.cleared   <- 0
+
+ps2.v1v2v3
+
+```
+
+## Summary statistics
+
+```{r summary-statistics}
+
+## Check metadata structure for conformity
+#str(sample_data(ps2.v1v2v3))
+
+## Check variables names
+## cat("Sample data variable names:\n\n")
+## colnames(sample_data(ps2.v1v2v3))
+
+## What is the distribution of bv accross visits?
+cat("\n\nDistribution of bv accross visits:\n\n")
+table(sample_data(ps2.v1v2v3)$bvscat, sample_data(ps2.v1v2v3)$VisitCode)
+
+## What is the distribution of csts accross visits
+cat("\n\nDistribution of CSTs accross visits:\n\n")
+table(sample_data(ps2.v1v2v3)$sim_CST, sample_data(ps2.v1v2v3)$VisitCode)
+
+## What is the distribution of STIs accross visits
+cat("\n\nDistribution of STIs accross visits:\n\n")
+table(sample_data(ps2.v1v2v3)$STI, sample_data(ps2.v1v2v3)$VisitCode)
+
+## What is the distribution of inflammation accross visits
+cat("\n\nDistribution of inflammation accross visits:\n\n")
+table(sample_data(ps2.v1v2v3)$Inflammation, sample_data(ps2.v1v2v3)$VisitCode)
+```
+
+## Alpha and Beta Diversity Analysis
+
+Before, the third step (prevalence assessment and filtering), we will subset the data from visit 1 to proceed with so that we can see prevalence in just visit 1.
+
+```{r child='alpha_n_beta_div.Rmd'}
+## Begin alpha and beta diversity analysis
+
+```
+
+## Differential analyses
+
+In this section we focus only on participants with all 3 visits. We assess the microbiome dynamics accross visits to establish treatment effects on the microbiome profiles of young women in the study.
+
+```{r echo=FALSE, child='diff_analysis.Rmd'}
+## Differential analysis
+```
+
+## Cytokine heatmaps All Visits
+
+```{r echo=TRUE, child='cytokines.Rmd'}
+## Cytokine analysis all visits
+
+```
+
+
+## Network analysis                                                                                                                      
+
+Here we assess the likelihoods of transitioning between CSTs between visits. i.e. is the introduction of medication likely to cause a transition in CST? if yes, what are the most probable transitions?
+
+```{r child='networkAnalysis.Rmd'}
+ ##Network analysis
+```

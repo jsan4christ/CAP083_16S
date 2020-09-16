@@ -1,0 +1,6 @@
+"0","##PCA plot - only proinflamatory"
+"0","#colnames(t.dataWSpecies) <-  c(""P. amnii"", ""P. timonensis"", ""P. bivia"", ""G. vaginalis"", ""A. vaginae"", ""P. anaerobius"", ""S. anginosus"", ""S. agalactie"", ""L. vaginalis"", ""V. montpellierensis"", ""D. micraerophilus"", ""L. crispatus"", ""L. jensenii"", ""L. iners"", ""S. moniliformis"")"
+"0","cyto.spec <- cbind(t.dataWSpecies , corrdataSpecies)"
+"0","cyto.spec.pca <- PCA(scale(cyto.spec, center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)"
+"0","corrplot::corrplot(cor(t.dataWSpecies , corrdataSpecies), type=""full"", "
+"0","         p.mat = cyto.spec.pca$P, sig.level = 0.001, insig = ""blank"")"

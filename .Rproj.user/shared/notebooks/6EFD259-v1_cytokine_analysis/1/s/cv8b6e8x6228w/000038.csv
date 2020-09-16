@@ -1,0 +1,4 @@
+"0","#Vector of top contributing in PC1"
+"0","top.cyto.pc1 <- c(""TNF.a"", ""RANTES"", ""IL.1b"", ""HGF"", ""MIG"", ""VEGF"", ""Eotaxin"", ""SCF"", ""IL.16"", ""LIF"", ""IL.9"", ""G.CSF"", ""M.CSF"",  ""IFN.a2"", ""IP.10"", ""TNF.b"" )"
+"0","# Contributions of variables to PC2"
+"0","fviz_contrib(dt.ps1.cyto.pca, choice = ""var"", axes = 2, top = 16)"

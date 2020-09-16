@@ -1,0 +1,4 @@
+"0","##########Melis guide#####"
+"0","ps2.v1v2v3.glom.species.ra.top25 <- prune_taxa(names(sort(taxa_sums(ps2.v1v2v3.glom.species.ra), T))[1:25], ps2.v1v2v3.glom.species.ra)"
+"2","Error in otu_table(x) : object 'ps2.v1v2v3.glom.species.ra' not found
+"

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1600244563290.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3733132671",
+    "id" : "4EC9CCF9",
+    "lastKnownWriteTime" : 1600259556,
+    "last_content_update" : 1600259556365,
+    "path" : "~/temp/Data_Analysis/Andile/CAP083_16S/diff_analysis.Rmd",
+    "project_path" : "diff_analysis.Rmd",
+    "properties" : {
+        "cursorPosition" : "602,31",
+        "scrollLine" : "592"
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

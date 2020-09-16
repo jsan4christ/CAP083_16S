@@ -1,0 +1,8 @@
+"0","# PCoA plots - only v3"
+"0","ps2.v3.f <- subset_samples(ps2.v1v2v3.f, sample_data(ps2.v1v2v3.f)$VisitCode == ""1030"")"
+"0","ps2.v3.f <- prune_taxa(taxa_sums(ps2.v3.f) > 0, ps2.v3.f)"
+"0","ord.ps2.v3.pcoa.bray <- ordinate(ps2.v3.f, method = ""PCoA"", distance = ""bray"")"
+"0","p.ord.ps2.v3.bray <- plot_ordination(ps2.v3.f, ord.ps2.v3.pcoa.bray, color = ""SeqRun"", shape = ""STI"", type = ""samples"", title = ""Bray Curtis Accross Visits"") + "
+"0","  theme_light() #+"
+"0","  #geom_text_repel(aes(label = ParticipantID), direction = ""y"")"
+"0","p.ord.ps2.v3.bray + geom_point(size=1)"

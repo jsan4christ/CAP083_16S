@@ -1,0 +1,7 @@
+"0","  #stat_compare_means(aes(label = ..p.signif..), method = ""kruskal.test"")"
+"0","# STIs vs Cytokines (MIP-1b)"
+"0","#compare_means(MIP.1b ~ CSTs, dt.ps1.STIs, method = ""kruskal.test"")"
+"0","p.STIs.MIP.1b <- ggboxplot(dt.ps1.STIs, x = ""sim_CST"", y = ""MIP.1b"", color = ""sim_CST"", palette = CSTsPallete, add = ""jitter"") +"
+"0","  theme_light() +"
+"0","  xlab(""CSTs"")"
+"0","p.STIs.MIP.1b + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"

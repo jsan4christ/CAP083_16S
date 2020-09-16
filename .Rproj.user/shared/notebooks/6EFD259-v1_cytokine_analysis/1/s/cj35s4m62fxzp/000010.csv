@@ -1,0 +1,6 @@
+"0"," # stat_compare_means(aes(label = ..p.signif..), method = ""kruskal.test"")"
+"0","# STIs vs Cytokines (MCP.1)"
+"0","#compare_means(MCP.1 ~ CSTs, dt.ps1.STIs, method = ""kruskal.test"")"
+"0","p.STIs.MCP.1 <- ggboxplot(dt.ps1.STIs, x = ""sim_CST"", y = ""MCP.1"", color = ""sim_CST"", palette = CSTsPallete, add = ""jitter"") +"
+"0","  theme_light()"
+"0","p.STIs.MCP.1 + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"

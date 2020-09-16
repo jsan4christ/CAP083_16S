@@ -1,0 +1,7 @@
+"0","  #stat_compare_means(aes(label = ..p.signif..), method = ""kruskal.test"")"
+"0","## Add cytokines Melis"
+"0","# No-STIs vs Cytokines (IFN.g)"
+"0","#compare_means(IFN.g ~ CSTs, dt.ps1.NoSTIs)"
+"0","p.noSTIs.IFN.g <- ggboxplot(dt.ps1.NoSTIs, x = ""sim_subCST"", y = ""IFN.g"", color = ""sim_subCST"", palette = CSTsPallete, add = ""jitter"", xlab = ""sim_subCST"") +"
+"0","  theme_light()"
+"0","p.noSTIs.IFN.g + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"

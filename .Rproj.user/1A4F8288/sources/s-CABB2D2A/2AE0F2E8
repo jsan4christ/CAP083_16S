@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1593164817138.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1755844329",
+    "id" : "2AE0F2E8",
+    "lastKnownWriteTime" : 1600227487,
+    "last_content_update" : 1600227487366,
+    "path" : "~/temp/Data_Analysis/Andile/CAP083_16S/v1_cytokine_analysis.Rmd",
+    "project_path" : "v1_cytokine_analysis.Rmd",
+    "properties" : {
+        "cursorPosition" : "196,30",
+        "scrollLine" : "181"
+    },
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

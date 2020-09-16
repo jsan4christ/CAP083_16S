@@ -1,0 +1,30 @@
+"0","## Visit2 only:"
+"0","ps2.v2 <- prune_samples(sample_data(ps2.v1v2v3)$VisitCode == 1020, ps2.v1v2v3)"
+"0","ps2.v2 <- prune_taxa(taxa_sums(ps2.v2) > 0, ps2.v2)"
+"0","## Estimate richness"
+"0","ps2.v2 <- cestimate_richness(ps2.v2)"
+"2","The data you have provided does not have
+any singletons. This is highly suspicious. Results of richness
+estimates (for example) are probably unreliable, or wrong, if you have already
+trimmed low-abundance taxa from the data.
+
+We recommended that you find the un-trimmed data and retry."
+"0","## Aglomerate to species"
+"0","ps2.v2.glom.species <- tax_glom(ps2.v2, ""Species"")"
+"0","## Transform to relative abundance"
+"0","ps2.v2.cst.glom.species.ra <- transform_sample_counts(ps2.v2.glom.species, function(x) {"
+"0","  x/sum(x)"
+"0","})"
+"0","#Sort by CTS snd Shannon indexes before proceeding"
+"0","sample_data(ps2.v2.cst.glom.species.ra) <- sample_data(ps2.v2.cst.glom.species.ra)[order(sample_data(ps2.v2.cst.glom.species.ra)$sim_CST, sample_data(ps2.v2.cst.glom.species.ra)$ShannonLgT), ]"
+"0","ps2.v2.cst.glom.species.ra <- prune_samples(sample_sums(ps2.v2.cst.glom.species.ra) > 0, ps2.v2.cst.glom.species.ra)"
+"0","ps2.v2.cst.glom.species.ra <- prune_taxa(taxa_sums(ps2.v2.cst.glom.species.ra) > 0, ps2.v2.cst.glom.species.ra)"
+"0","  "
+"0","ord.pcoa.bray.v2 <- ordinate(ps2.v2.cst.glom.species.ra, method = ""PCoA"", distance = ""bray"")"
+"0","p.pcoa.ps2.v2.bray <- plot_ordination(ps2.v2.cst.glom.species.ra, ord.pcoa.bray.v2, color = ""sim_CST"") +"
+"0","    geom_point(aes(size = 0.6)) +"
+"0","    coord_fixed(0.27) +"
+"0","    theme_light() +"
+"0","    stat_ellipse() +"
+"0","  scale_colour_manual(name = ""CSTs"", breaks = CSTs_all, values = CSTsPalleteNamed)"
+"0","p.pcoa.ps2.v2.bray"

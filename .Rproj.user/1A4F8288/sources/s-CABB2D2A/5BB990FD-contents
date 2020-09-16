@@ -1,0 +1,1647 @@
+options(error=recover)
+# Read in an RDS file containing taxonomic and count information
+#seqtab <- readRDS("dada2-Chimera-Taxonomy/seqtab_final.RDS")
+#str(seqtab)
+
+#Define row names for sequence table
+#row.names(seqtab) <- gsub("_.\\d*_.\\d*", "", row.names(seqtab)) #Names need to match those of sample data/mapping file
+
+# Read in an RDS file containing tax
+#tax_final <- read.table("dada2-Chimera-Taxonomy/tax-annotation_MH.TAB")
+# tax_final[,"Kingdom"] <- sub("k__", "", tax_final[,"Kingdom"])
+# tax_final[,"Phylum"] <- sub("p__", "", tax_final[,"Phylum"])
+# tax_final[,"Class"] <- sub("c__" , "", tax_final[,"Class"])
+# tax_final[,"Order"] <- sub("o__", "", tax_final[,"Order"])
+# tax_final[,"Family"] <- sub("f__", "", tax_final[,"Family"])
+# tax_final[,"Genus"] <- sub("g__", "", tax_final[,"Genus"])
+# tax_final[,"Species"] <- sub("s__", "", tax_final[,"Species"])
+# tax_final[,"NA."] <- sub("s__", "", tax_final[,"NA."])
+
+#saveRDS(tax_final, "dada2-Chimera-Taxonomy/tax_final2.RDS")
+
+#Read in phylogenetic tree
+#phy <- readRDS("dada2-Alignment/phangorn.tree.RDS")
+
+
+# Read in a mapping file containing sample variable information
+#library(readxl)
+#mapping <- read_excel("metadata.xlsx")
+#View(mapping)
+#Samples <- read_excel("Samples.xlsx")
+#View(Samples)
+##amples$short <- substr(Samples$SampleID, 1,6)
+#Samples$fullID <- paste0(Samples$short, Samples$Visit)
+
+#sample.data <- merge(mapping, Samples, by.x = "SampleID", by.y = "fullID")
+# Sample missing metadata 1202273
+
+#sample.data <- merge(mapping, Samples, by.x = "SampleID", by.y = "fullID", all.x = T)
+#missing.sample <- subset(sample.data, is.na(SampleID.y))
+
+#row.names(sample.data) <- sample.data$SampleID
+
+#seqtab.1 <- subset(seqtab, !row.names(seqtab) %in% "120227_S89_L001")
+
+#row.names(seqtab.1) <- sample.data$SampleID
+#saveRDS(seqtab.1, "dada2-Chimera-Taxonomy/seqtab_final2.RDS")
+#saveRDS(sample.data, "Metadata/metadata.RDS")
+
+
+#sample.data <- readRDS("Metadata/metadata.RDS")
+#sample.data <- sample_data(sample.data)
+
+
+#View(full.mapping)
+#sample.data <- read.table("metadataAll.tsv", sep = "\t", header = TRUE)
+#sample.data <- read_excel("mapping.xlsx")
+#sample.data$Number_of_partners_in_the_past_12_months <- as.factor(sample.data$Number_of_partners_in_the_past_12_months)
+# sample.data$STI <- as.factor(sample.data$STI)
+# sample.data$Candidiasis <- as.factor(sample.data$Candidiasis)
+# sample.data$Inflammation <- as.factor(sample.data$Inflammation)
+
+#summary(sample.data$Age)
+#sample.data$agecat[sample.data$Age <= 23] <- "grp1" 
+#sample.data$agecat[sample.data$Age > 23 & sample.data$Age <= 28] <- "grp2"
+#sample.data$agecat[sample.data$Age > 28 & sample.data$Age <= 33] <- "grp3"
+#sample.data$agecat[sample.data$Age > 33 & sample.data$Age <= 38] <- "grp4"
+#sample.data$agecat[sample.data$Age > 38] <- "grp5"
+
+#sample.data$agecat <- as.factor(sample.data$agecat)
+
+# sort(unique(sample.data$BVScore))
+# sample.data$bvscorecat[sample.data$BVScore <= 3] <- "Negative"
+# sample.data$bvscorecat[sample.data$BVScore > 3 & sample.data$BVScore <= 6] <- "Intermediate"
+# sample.data$bvscorecat[sample.data$BVScore > 6 ] <- "BV"
+# sample.data$bvscorecat <- as.factor(sample.data$bvscorecat)
+# 
+# row.names(sample.data) <- sample.data$SampleID  #Ensure that sample data has row names. We use sample ID here
+# 
+# row.names(mapping) <- mapping$SampleID
+# 
+# #store existing rowanames of seq tab
+# seqtab.rownames <- row.names(seqtab)
+# df.names <- as.data.frame(seqtab.rownames)
+# df.names$SampleID <- substr(df.names$seqtab.rownames, 1, 6)
+# df.names
+
+# Regenerate tree
+#seqs <- getSequences(seqtab.1)
+#names(seqs) <- seqs # This propagates to the tip labels of the tree
+#alignment <- AlignSeqs(DNAStringSet(seqs), anchor=NA)
+
+#library(phangorn)
+#phang.align <- phyDat(as(alignment, "matrix"), type="DNA")
+#dm <- dist.ml(phang.align)
+#treeNJ <- NJ(dm) # Note, tip order != sequence order
+#fit = pml(treeNJ, data=phang.align)
+
+## negative edges length changed to 0!
+
+#fitGTR <- update(fit, k=4, inv=0.2)
+#fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
+#                      rearrangement = "stochastic", control = pml.control(trace = 0))
+#detach("package:phangorn", unload=TRUE)
+
+#saveRDS(fitGTR, file = "dada2-Alignment/phangorn.tree2.RDS")
+
+#Read in taxa table
+
+phyTree$tip.label ##to view/get tip labels
+
+
+#tax_final <- readRDS("dada2-Chimera-Taxonomy/tax_final.RDS")
+#tax_final <- tax_table(tax_final)
+
+#tax_final2 <- readRDS("dada2-Chimera-Taxonomy/tax_final2.RDS")
+#tax_final2 <- tax_table(tax_final2)
+
+#tax_final3 <- tax_final2
+#taxa_names(tax_final3) <- taxa_names(tax_final)
+#saveRDS(tax_final3, "dada2-Chimera-Taxonomy/tax_final3.RDS")
+
+###Readin mapping file:
+#mappings_main <- read_excel("Metadata/mappings_main.xlsx")
+#View(mappings_main)
+#row.names(mappings_main) <- mappings_main$SampleID
+#saveRDS(mappings_main, "Metadata/mappings_main.RDS") #has metadata for all the 3 visits. 
+
+#tiplabels(phy) #load dada2 to use
+
+###Import positions and y-chromo
+library(readxl)
+sampos <- read_excel("Metadata/sampos.xlsx")
+View(sampos)
+
+ychrom <- read_excel("Metadata/ychrom.xlsx")
+View(ychrom)
+
+names(sampos) <- c("SampleID", "VisitCode", "Position")
+
+samposchrom <- merge(sampos, ychrom, by = c("SampleID", "VisitCode"))
+
+names(mapping.data)[4] <- "VisitCode"
+names(samposchrom)[1] <- "ParticipantID"
+names(mapping.data)[2] <- "ParticipantID"
+
+dt.mapping_data <- mapping.data %>% left_join(samposchrom, by = c("ParticipantID", "VisitCode"))
+
+dt.mapping_data <- dt.mapping_data[!duplicated(dt.mapping_data[c("ParticipantID", "VisitCode")])]
+
+rownames(mapping.data) <- mapping.data$SampleID
+saveRDS(mapping.data, "Metadata/mappings_main2.RDS")
+
+
+write.nexus.data("dada2-Alignment/aligned_seqs.fasta", file = "dada2-Alignment/aligned_seqs.nex", format = "DNA")
+tx <- read.hyphy("dada2-Alignment/tree.newick", "dada2-Alignment/aligned_seqs.nex")
+
+melt.meta <- psmelt(ps1.cst.glom.Species.ra.top25b)
+xtree <- phy_tree(ps1.cst.glom.Species.ra.top25b)
+xtreem <- ps
+
+xdata <- data.frame(xtree$tip.label, melt.meta[, c("Species", "Abundance", "OTU", "classif", "CST" )]) 
+trace(ggtree, edit=TRUE)
+
+draw_phyloseq_ggtree(ps1.cst.glom.Species.ra.top25b)
+#https://guangchuangyu.github.io/2018/04/rename-phylogeny-tip-labels-in-treeio/
+#https://cran.r-project.org/web/packages/data.tree/vignettes/data.tree.html
+#Check branch lengths...
+any(is.na(tree$edge.length))
+
+#Try replacing the NA branch length with 0.0.
+phy_tree(physeq)$edge.length[which(is.na(phy_tree(physeq)$edge.length))] <- 0
+
+#make a circular tree with this data (not run).
+plot_tree(physeq, color = "Thing", ladderize = "left") + coord_polar(theta = "y")
+
+phy_tree(physeq)$edge.length[which(is.na(phy_tree(physeq)$edge.length))] <- 0
+
+write.tre
+
+require(microbenchmark)
+
+bm <- microbenchmark(
+  phyloseq = plot_tree(GP.chl, color="SampleType", shape="Family",
+                       label.tips="Genus", size="Abundance"),
+  ggtree = draw_phyloseq_ggtree(GP.chl),
+  times=100L
+)
+
+#http://bioconductor.org/packages/release/bioc/vignettes/phyloseq/inst/doc/phyloseq-analysis.html
+# Split
+plot_ordination(GP, GP.dpcoa, type="split",
+                color="SampleType", shape="Phylum") +
+  ggplot2::scale_colour_discrete()
+
+## Tree Plot
+
+```{r}
+#getRoot(midpoint.root(p.tree2$tree))
+#ape::write.tree(phy, file = "dada2-Alignment/ape_tree.tre")
+#xy <- read.tree("dada2-Alignment/ape_tree.tre")
+#xmeta <- psmelt(ps1.cst.glom.Species.ra.top25)
+#xmeta <- as(sample_data(ps1.cst.glom.Species.ra.top25), "data.frame")
+#saveRDS(xmeta, file = "Metadata/xmeta.RDS")
+# circTree <- ggtree(midpoint.root(xy)) + 
+# geom_tippoint(aes_string(color = "SampleID")) + 
+# theme_tree(legend.position='right') + 
+# geom_hilight(node=276, fill="darkgreen", alpha=.3) + 
+# geom_hilight(node=426, fill="darkred", alpha=.3)
+
+#plot_tree(ps1.cst.glom.Species.ra.top25)
+#plot_tree(ps1.cst.glom.Species.ra.top25, color = "classif", ladderize = "left") + coord_polar(theta = "y")
+
+
+
+# circTreex <- circTree %>% gheatmap(as.vector(dt.ps1.cst.rich[, "classif"]), offset=0, width=0.1, colnames=TRUE)
+# open_tree(circTreex, 0)
+
+
+
+#draw_phyloseq_ggtree(ps1.cst.glom.Species.ra.top25b)
+
+
+```
+## Hierachical Clusters
+```{r}
+hcMat <- na.omit(data.frame(otu_table(ps1.cst.glom.Species.ra.top25)))
+
+desc_stats <- data.frame(
+  Min = apply(hcMat, 2, min), # minimum
+  Med = apply(hcMat, 2, median), # median
+  Mean = apply(hcMat, 2, mean), # mean
+  SD = apply(hcMat, 2, sd), # Standard deviation
+  Max = apply(hcMat, 2, max) # Maximum
+)
+desc_stats <- round(desc_stats, 1)
+head(desc_stats)
+
+hcDist <- dist(scale(hcMat))
+
+hc <- hclust(hcDist, method = "average")
+
+plot(hc)
+
+```
+```{r}
+# Cut tree into 4 groups
+# grp <- cutree(hc, k = 4)
+# # Number of members in each cluster
+# table(grp)
+# 
+# library(factoextra)
+# fviz_cluster(list(data = , cluster = grp))
+```
+## Differential Analysis
+
+
+```{r}
+
+any(taxa_sums(ps1.cst.glom.Species.ra.top25) < 5)
+any(sample_sums(ps1.cst.glom.Species.ra.top25) < 1)
+ps1.cst.glom.Species.ra.top25.g5 <- prune_taxa(taxa_sums(ps1.cst.glom.Species.ra.top25) > 12, ps1.cst.glom.Species.ra.top25)
+
+#Create deseq object
+ds.ps1.LRT <- phyloseq_to_deseq2(ps1.cst.glom.Species.ra.top25.g5, ~bvscat + Any_STI + Inflammation)
+
+#Filter out ASVs with very few counts,
+keep <- rowSums(counts(ds.ps1.LRT)) >= 10
+ds.ps1.LRT <- ds.ps1.LRT[keep,]
+
+#View remaining ASV counts
+cnts <- counts(ds.ps1.LRT)
+
+#Calculate the geomeans
+geoMeans <- apply(cnts, 1, function(row) if (all(row == 0)) 0 else exp(sum(log(row[row != 0]))/length(row)))
+ds.ps1.LRT <- estimateSizeFactors(ds.ps1.LRT, geoMeans=geoMeans)
+
+#Run Deseq
+dds.ps1.LRT <- DESeq(ds.ps1.LRT, test = "LRT", reduced = ~bvscat)
+
+# Tabulate results
+res.dds.ps1.LRT <- results(dds.ps1.LRT)
+res.dds.ps1.LRT$symbol <- mcols(dds.ps1.LRT)$symbol
+summary(res.dds.ps1.LRT)
+mcols(res.dds.ps1.LRT)
+write.table(res.dds.ps1.LRT, file = "results/res.dds.ps1.LRT.txt",  sep = "\t")
+
+nrow(res.dds.ps1.LRT)
+df.res <- as.data.frame(res.dds.ps1.LRT[which(res.dds.ps1.LRT$padj < 0.05), ])
+nrow(df.res)
+df.res <- rownames_to_column(df.res, var = "ASV")
+write.table(df.res, file = "results/df.res.txt")
+
+# Create appropriately formatted taxa table
+# RDP
+tb.taxa.table <- as.tibble(as.data.frame(tax_table(ps1)))
+tb.taxa.table <- rownames_to_column(tb.taxa.table, var = "ASV") #from tibble
+df.rdp <- left_join(df.res, taxa.table, by = "ASV")
+colnames(df.rdp)
+
+gg.p.diffab <- ggplot(df.rdp, aes(x = Phylum, y = log2FoldChange, color = species)) +
+  geom_jitter(size = 3, alpha = 0.7, width = 0.1) +
+  geom_hline(yintercept = 0, lty = 2) +
+  ylim(-35, 35)
+gg.p.diffab
+
+# This is a perfect place for an interactive plot
+ggplotly(p.diffab)
+```
+
+*Plots by PCA*
+  
+  ```{r}
+CSTColors <- brewer.pal(4, "Paired")
+#CSTs <- as.character(seq(K))
+CSTs <- c("CT1", "CT2", "CT3", "CT4")
+
+##Bray Curtis to explore abundance
+
+CSTclolors <- brewer.pal(4, "Paired")[c(1,2,3,4)]
+names(CSTclolors) <- CSTs
+CSTColorScale <- scale_colour_manual(name = "CST",  values = CSTclolors[1:4])
+CSTFillScale <- scale_fill_manual(name = "CST", values = CSTColors[1:4])
+grid.arrange(ggplotGrob(plot_ordination(ps1.cst.glom.Species.ra, ord.pcoa.bray, color = "classif2") + CSTColorScale + stat_ellipse()) ,
+             ggplotGrob(plot_ordination(ps1.cst.glom.Species.ra, ord.pcoa.bray, axes = c(3,4), color = "classif2")+ CSTColorScale + stat_ellipse()) )
+
+#Jaccardi to explore presence absence
+ord.pcoa.jac <- ordinate(ps1.cst.glom.Species.ra, method = "PCoA", distance = "jaccard")
+plot_ordination(ps1.cst.glom.Species.ra, ord.pcoa.jac, color = "classif2") + CSTColorScale + ggtitle("PCoA Jaccardi by Cluster") + stat_ellipse()
+```
+
+unloadNamespace("ggtree") #unload package
+
+#To get the loadings with prcomp:
+pca <- prcomp(my_table, scale = TRUE)
+pca <- prcomp(data)
+loadings <- as.data.frame(pca$rotation)X<- t(scale(t(dt.ps1.cyto.lg10),center=TRUE,scale=FALSE))
+sv<- svd(t(X))
+U<- sv$u
+V<- sv$v
+D<- sv$d
+Z<- t(X)%*%V
+
+pc_dat<- data.frame(bvscat = dt.ps1.cyto.lg10$bvscat, PC1 = Z[,1], PC2 = Z[,2])
+
+## make figure with ggplot2
+library(ggplot2)
+library(ggthemes)
+ggplot(pc_dat, aes(x=PC1, y=PC2, col=cell.line)) + 
+  geom_point() + 
+  theme_bw() +
+  theme(panel.border = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        axis.line.x = element_line(color="black", size = 0.6),
+        axis.line.y = element_line(color="black", size = 0.6))
+
+
+element_text(size = base_size *  0.8, angle = 330, hjust = 0, colour = "grey50")
+
+##Organise images printed out
+par(mfrow=c(1,2))
+
+
+temp <- princomp(dt.ps1.cyto)
+temp$loadings
+summary(temp, loadings = TRUE)
+
+temp2 = prcomp(dt.ps1.cyto, scale. = TRUE)
+temp2$rotation
+
+##import and process cytokine data
+X20181126_Cytokine_data <- read_excel("metadata/20181126 Cytokine data.xlsx")
+View(X20181126_Cytokine_data)
+
+colnames(X20181126_Cytokine_data)[2] <- "VisitCode"
+
+saveRDS(X20181126_Cytokine_data, file = "metadata/cytokines_raw.RDS")
+
+#myfile %>% 
+#  mutate(V5 = case_when(V1 == 1 & V2 != 4 ~ 1, 
+#                        V2 == 4 & V3 != 1 ~ 2,
+#                        TRUE ~ 0))
+
+cytokine <- X20181126_Cytokine_data %>% mutate(SampleID = case_when(VisitCode == 1000 ~ paste0(PID,1), 
+                                                                    VisitCode == 1020 ~ paste0(PID,2),
+                                                                    VisitCode == 1030 ~ paste0(paste0(PID,3))))
+
+cytokine.log10 <- log10(cytokine[, c(4:51)])
+saveRDS(cytokine, file = "metadata/cytokinelg10.RDS")
+
+anyDuplicated(cytokine, by = "SampleID")
+temp.df <- rownames_to_column(df.sample_sums)
+colnames(temp.df)[1] <- "SampleID"
+getInf <- merge(temp.df[, c("SampleID","SampleID")], cytokine[, c("SampleID","Inflammed" )], by= "SampleID", all.x = T)
+getInf$SampleID.1 <- NULL
+
+
+sampleIds <- data.frame(sample_data(ps0))$SampleID
+cytokine.ps0 <- subset(cytokine, SampleID %in% sampleIds)
+saveRDS(cytokine.ps0, file = "metadata/cytokines_ps0.RDS")
+
+cytokine.ps0 <- readRDS("metadata/cytokines_ps0.RDS")
+cytokine.ps1 <- subset(cytokine.ps0, VisitCode == 1000 & SampleID != 1202551)
+rownames(cytokine.ps1) <- cytokine.ps1$SampleID
+dim(cytokine.ps1)
+cytokine.ps1.all <- cytokine.ps1
+
+#Mean SD scaling
+cytokine.ps1.all[c(4:51)] <- scale(log10(cytokine.ps1.all[c(4:51)]), center = TRUE, scale = TRUE)
+head(cytokine.ps1.all)
+
+##Set all outliers to NA
+cytokine.ps1.all[c(4:51)][cytokine.ps1.all[c(4:51)] > 3 | cytokine.ps1.all[c(4:51)] < -3.1] <- NA
+hist(cytokine.ps1.all$`TNF-a`)
+shapiro.test(cytokine.ps1.all$`TNF-a`)
+
+#Setup colmn names
+colnames(cytokine.ps1.all) <- c("PID","VisitCode", "Inflammed","IL.1b","IL.1ra","IL.2", "IL.4", "IL.5", "IL.6", "IL.7", "IL.8", "IL.9", "IL.10","IL.12p70","IL.13","IL.15","IL.17","Eotaxin", "FGF.basic", "G.CSF", "GM.CSF","IFN.g","IP.10","MCP.1","MIP.1a","PDGF.bb", "MIP.1b","RANTES","TNF.a","VEGF", "IL.1a","IL.2Ra","IL.3", "IL.12p40","IL.16","IL.18","CTACK","GROa", "HGF","IFN.a2", "LIF","MCP.3","M.CSF","MIF","MIG","b.NGF","SCF","SCGF.b","SDF.1a","TNF.b", "TRAIL", "SampleID")
+saveRDS(cytokine.ps1.all, file = "metadata/dt.ps1.cyto.all.RDS")
+
+#Subset top cytokines
+top.cyto.pc1 <- c("SampleID", "TNF.a", "RANTES", "IL.1b", "HGF", "MIG", "VEGF", "Eotaxin", "SCF", "IL.16", "LIF", "IL.9", "G.CSF", "M.CSF",  "IFN.a2", "IP.10", "TNF.b", "IL.12p70", "IL.4", "IL.1a", "IFN.g", "IL.10" )
+dt.ps1.cyto.top <- cytokine.ps1.all[, top.cyto.pc1]
+saveRDS(dt.ps1.cyto.top, file = "metadata/dt.ps1.cyto.top.RDS")
+
+##Get some data
+write.table(pca_data_ct, file = "metadata/pca_data_cyt.csv", row.names = F, quote = F, sep = ",")
+tnfa <- pca_data_ct[, c("classif", "TNF.a")]
+tnfa
+tnfaWide <- tnfa %>% 
+  
+  
+##  Clustering using tsne
+library(tsnemicrobiota)
+tsne_res <- tsne_phyloseq(ps1.cst.glom.Species, distance='bray',
+                          perplexity = 8, verbose=0, rng_seed = 3901)
+plot_tsne_phyloseq(ps1.cst.glom.Species.ra.top25, tsne_res,
+                   color = 'classif', title='t-SNE (Weighted UniFrac)') + stat_ellipse()
+
+
+#Filter ids in visit2 missing in visit 1
+View(data.frame(sample_data(ps2.v1v2)[, c("ParticipantID", "VisitCode")]) %>% 
+     filter(ParticipantID %in% missing.visit.ids))
+
+#dt.ps1.cyto.scale <- scale(dt.ps1.cyto)
+
+#dt.ps1.cyto.lg10 <- log10(m + 3) ##data already log transformed
+
+#m <- as.matrix(dt.ps1.cyto)
+#require( gplots ); heatmap.2( log10(m + 3) )
+
+hist(dt.ps1.cyto.scale[, "TNF.a"])
+
+
+###Vegan rarefaction
+#Before Dropping low abundant samples
+S <- specnumber(data.frame(otu_table(ps0))) # observed number of species
+(raremax <- min(rowSums(data.frame(otu_table(ps0)))))
+Srare <- rarefy(data.frame(otu_table(ps0)), raremax)
+plot(S, Srare, xlab = "Observed No. of Species", ylab = "Rarefied No. of Species")
+abline(0, 1)
+abline(lm(S ~ Srare))
+rarecurve(data.frame(otu_table(ps0)), step = 20, sample = raremax, col = "blue", cex = 0.6)
+##After dropping low abundant samples
+ps00 <- subset_samples(ps0, sample_sums(ps0) > 1000)
+S <- specnumber(data.frame(otu_table(ps00))) # observed number of species
+(raremax <- median(rowSums(data.frame(otu_table(ps00)))))
+Srare <- rarefy(data.frame(otu_table(ps00)), raremax)
+plot(S, Srare, xlab = "Observed No. of Species", ylab = "Rarefied No. of Species")
+abline(0, 1)
+abline(lm(S ~ Srare))
+rarecurve(data.frame(otu_table(ps00)), step = 20, sample = raremax, col = "blue", cex = 0.6, label = FALSE)
+
+
+###ggplot heatmap - with outliers removed
+#mat.m <- melt(dt.ps1.cyto.top[, -c(1:3)])
+#colnames(mat.m)[2] <- "cytokine"
+#mat.m$SampleID <- as.factor(mat.m$SampleID)
+#mat.m <- ddply(mat.m, .(cytokine), transform, rescale = scale(value)) #from package plyr
+#mat.m <- mat.m[order(hcbdf$SampleID)]
+#str(mat.m)
+
+
+###ggplot heatmap - without removing the outliers
+mat.m <- melt(hcbdf[c(1,23:70)])
+colnames(mat.m)[c(1, 2)] <- c("SampleID", "cytokine")
+mat.m$SampleID <- as.factor(mat.m$SampleID)
+mat.m$cytokine <- as.factor(mat.m$cytokine)
+mat.m <- ddply(mat.m, .(cytokine), transform, rescale = scale(value, center = TRUE, scale = TRUE)) #from package plyr
+mat.m["rescale"][mat.m["rescale"] > 3.1 | mat.m["rescale"] < -3.1] <- NA
+str(mat.m)
+
+p <- ggplot(mat.m, aes(SampleID, cytokine, fill = rescale)) + 
+      geom_tile(colour="white", size=0.25) + 
+      scale_fill_gradient2(low = "green", mid = "yellow", high = "red", na.value = "grey90") + 
+      labs(x="Samples",y="Cytokines") + #Remove X and Y axis labels
+      scale_x_discrete(expand = c(0, 0)) +
+      scale_y_discrete(expand = c(0, 0)) +
+      #coord_fixed() + #Maintain aspect ratio
+      theme_grey(base_size=8)+
+      theme(legend.position = "bottom",  axis.text.x=element_blank(), axis.ticks.x=element_blank()) +
+      theme(plot.margin=unit(c(0.2,0.5,0,0),"lines")) #+
+      #guides(fill=F) #This will just get rid of the legend
+p
+
+#Add Cytokine PC1 for analysis
+sample_data(ps1.cst.glom.Species.ra.top25)$cPC1 <- pcs_samples$Dim.1
+hcbdf <- data.frame(sample_data(ps1.cst.glom.Species.ra.top25))
+hcbdf <- hcbdf[order(hcbdf$cPC1),]
+hcbdf$index <- seq(1,nsamples(ps1.cst.glom.Species.ra.top25))
+
+Chl <- make_hcb(hcbdf, "Chlamydia", name="Chlamydia", 
+                fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+Gon <- make_hcb(hcbdf, "Gonorrhoea", name="Gonorrhoea", 
+                fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+Tri <- make_hcb(hcbdf, "Trichomoniasis", name="Trichomoniasis", 
+                fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+Cand <- make_hcb(hcbdf, "Candidiasis", name="Candidiasis", 
+                 fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+# 
+hsv2 <- make_hcb(hcbdf, "HSV.2", name="HSV 2", 
+                 fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+inf <- make_hcb(hcbdf, "Inflammation", name="Inflammation", 
+                fillScale = scale_fill_manual(values=c("0"="grey90", "1"="darkred")))
+bvscores <- make_hcb(hcbdf, "bvscat", name="Nuggent Score", 
+                     fillScale = scale_fill_manual(values=c("Negative"="white", "Intermediate"="maroon", "BV"="grey60")))
+
+cyto.pc1 <- make_hcb(hcbdf, "cPC1", name="cPC1", 
+                     fillScale = scale_fill_gradient2(low = "green", mid = "yellow", high = "red"))
+
+ Chl <- Chl + theme(axis.text.y = element_text(color="tan4"))    
+ Gon <- Gon + theme(axis.text.y = element_text(color="tan4"))
+ Tri  <- Tri + theme(axis.text.y = element_text(color="tan4")) 
+ Cand <- Cand + theme(axis.text.y = element_text(color="tan4"))
+ inf <- inf + theme(axis.text.y = element_text(color="deepskyblue4"))
+ hsv2 <- hsv2 + theme(axis.text.y = element_text(color="firebrick3"))
+ bvscores <- bvscores + theme(axis.text.y = element_text(color="firebrick3"))
+ cyto.pc1 <- cyto.pc1 + theme(axis.text.y = element_text(color="firebrick3")) +
+                      geom_tile(color = "white")
+Fig4 <- mush(p, list(Chl, Gon, Tri, hsv2, inf, bvscores, cyto.pc1))
+grid.newpage()
+grid.draw(Fig4)
+
+
+###Using heatmap.2
+
+library(gplots)
+cytokine.mat <- as.matrix(cytokine.df[, -1])
+cytokine.mat <- scale(cytokine.mat, scale = T, center = T)
+cytokine.mat[cytokine.mat > 3.1 | cytokine.mat < -3.1] <- NA
+heatmap.2(t(cytokine.mat), na.rm = T, dendrogram = "none", Rowv = NA, Colv = NA, trace = "none", scale = "none")
+
+heatmap2.plus(t(cytokine.mat))
+
+ComplexHeatmap::Heatmap(t(cytokine.mat))
+
+## Extract the correlation coefficients
+dt.ps1.cyto.cm$r
+## Extract p-values
+dt.ps1.cyto.cm$P
+
+##Symbolic Number Coding
+#symnum(dt.ps1.cyto.cm$r, abbr.colnames = FALSE)
+
+head(dt.ps1.cyto.cm)  ##Correlation matrix
+
+head(flatMatrix)
+
+
+####Not the right heatmap for cytokines####
+##Heatmap
+#pdf(file = "results/aheatmap.pdf")
+#aheatmap(t(dt.ps1.cyto.top), annCol = pca_data)
+#dev.off()
+
+
+
+##Heatmap of top 16 cytokines
+#dt.ps1.cyto.top.tr <- t(dt.ps1.cyto.top)
+
+# hmc <- gg_heatmap(dt.ps1.cyto.top)
+# #mat <- t(rownames_to_column(data.frame(dt.ps1.cyto.top)))
+# 
+###ggplot heatmap
+mat.m <- melt(dt.ps1.cyto.top[, -c(1:3)])
+mat.m <- ddply(mat.m, .(variable), transform, rescale = scale(value))
+#mat.m <- ddply(mat.m, .(Var2), transform,  rescale = scale(value))
+
+p <- ggplot(mat.m, aes(SampleID, variable, fill = value)) + geom_tile() + 
+  scale_fill_gradient(low = "black", high = "red") + 
+  #scale_x_discrete(expand = c(0, 0)) +
+  #scale_y_discrete(expand = c(0, 0)) +
+  theme(legend.position = "bottom",  axis.text.x=element_blank(), axis.ticks.x=element_blank()) +
+  theme(plot.margin=unit(c(0,0,0,0),"lines")) +
+  guides(fill=F)
+p
+Chl <- make_hcb(hcbdf, "Chlamydia", name="Chlamydia", 
+                fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="tan4")))
+Gon <- make_hcb(hcbdf, "Gonorrhoea", name="Gonorrhoea", 
+                fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="green4")))
+Tri <- make_hcb(hcbdf, "Trichomoniasis", name="Trichomoniasis", 
+                fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="yellow4")))
+Cand <- make_hcb(hcbdf, "Candidiasis", name="Candidiasis", 
+                 fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="tomato4")))
+# 
+hsv2 <- make_hcb(hcbdf, "HSV.2", name="HSV 2", 
+                 fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="firebrick3")))
+inf <- make_hcb(hcbdf, "Inflammation", name="Inflammation", 
+                fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="darkred")))
+bvscores <- make_hcb(hcbdf, "bvscat", name="Nuggent Score", 
+                     fillScale = scale_fill_manual(values=c("Negative"="white", "Intermediate"="maroon", "BV"="grey60")))
+# 
+# psa <- psa + theme(axis.text.y = element_text(size=8, face="bold", color="grey60"))
+# Chl <- Chl + theme(axis.text.y = element_text(size=8, face="bold", color="tan4"))    
+# Gon <- Gon + theme(axis.text.y = element_text(size=8, face="bold", color="green4"))
+# Tri  <- Tri + theme(axis.text.y = element_text(size=8, face="bold", color="yellow4")) 
+# Cand <- Cand + theme(axis.text.y = element_text(size=8, face="bold", color="tomato4"))
+# inf <- inf + theme(axis.text.y = element_text(size=8, face="bold", color="deepskyblue4"))
+# hsv2 <- hsv2 + theme(axis.text.y = element_text(size=8, face="bold", color="firebrick3"))
+# 
+Fig3 <- mush(p, list(Chl, Gon, Tri, hsv2, inf, bvscores))
+grid.newpage()
+grid.draw(Fig3)
+#####End#####
+
+##Reorder CTs, using factor in the code
+#sample_data(ps1.cst.glom.Species.1)$classif <- factor(sample_data(ps1.cst.glom.Species.1)$classif, levels = c("CT4", "CT1", "CT3", "CT2"), labels = c("CT1", "CT2", "CT3", "CT4"))
+#levels(sample_data(ps1.cst.glom.Species.1)$classif)
+#sample_data(ps1.cst.glom.Species.1)$classif[sample_data(ps1.cst.glom.Species.1)$classif == "CT1" ] <- NA
+#sample_data(ps1.cst.glom.Species.1)$classif[sample_data(ps1.cst.glom.Species.1)$classif == "CT4" ] <- "CT1"
+#sample_data(ps1.cst.glom.Species.1)$classif[sample_data(ps1.cst.glom.Species.1)$classif == "CT2" ] <- "CT4"
+#sample_data(ps1.cst.glom.Species.1)$classif[is.na(sample_data(ps1.cst.glom.Species.1)$classif) ] <- "CT1"
+
+
+#hm_annot_all_clus <- cbind(hm_annot_all, dt.ps1.cst.sample_data[, c("classif", "Any_STI")])
+
+#https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html
+
+barplot = bar.plots(physeq = ps2.v1v2, cat = "bvscat", level = level, count = count, perc = perc, 
+                    outDir = "Figures", filen = 'Barplots_by_bvcat')
+print(barplot)
+
+#https://github.com/joey711/phyloseq/issues/694
+#Error in validObject(.Object) : invalid class “otu_table” object: 
+#  OTU abundance data must have non-zero dimensions.
+
+physeqrF = filter_taxa(physeq, function(x) mean(x) < .1,TRUE)
+rmtaxa = taxa_names(physeqrF)
+alltaxa = taxa_names(physeq)
+
+myTaxa = alltaxa[!alltaxa %in% rmtaxa]
+
+physeq <- prune_taxa(myTaxa,physeq)
+
+#minTotRelAbun = 1e-5
+#x = taxa_sums(physeq)
+#keepTaxa = which((x / sum(x)) > minTotRelAbun)
+#physeq = prune_taxa(keepTaxa, physeq)
+
+ps2.v1v2 <- subset_samples(ps0.phylum.bact, ParticipantID %in% visit2.ids & (VisitCode == 1000 | VisitCode == 1020))
+ps2.v1v3 <- subset_samples(ps0.phylum.bact, ParticipantID %in% visit3.ids & (VisitCode == 1000 | VisitCode == 1030))
+
+#In visit2 missing visit1
+visit2.missing.visit1 <- data.frame(sample_data(ps2.v1v2)[, c("ParticipantID", "VisitCode")]) %>% 
+  group_by(ParticipantID) %>% 
+  filter(sum(!is.na(VisitCode)) == 1)
+missing.visit.ids2 <- visit2.missing.visit1$ParticipantID
+ps2.v1v2 <- subset_samples(ps2.v1v2, !ParticipantID %in% missing.visit.ids2)
+
+ps2.v1v2 <- prune_taxa(taxa_sums(ps2.v1v2) > 0, ps2.v1v2)
+ps2.v1v2
+
+#In visit3 missing visit1
+visit3.missing.visit1 <- data.frame(sample_data(ps2.v1v3)[, c("ParticipantID", "VisitCode")]) %>% 
+  group_by(ParticipantID) %>% 
+  filter(sum(!is.na(VisitCode)) == 1)
+missing.visit.ids3 <- visit3.missing.visit1$ParticipantID
+ps2.v1v3 <- subset_samples(ps2.v1v3, !ParticipantID %in% missing.visit.ids3)
+
+ps2.v1v3 <- prune_taxa(taxa_sums(ps2.v1v3) > 0, ps2.v1v3)
+ps2.v1v3
+
+ps2.v2 <- prune_samples(sample_data(ps2.v1v2)$VisitCode == 1020, ps2.v1v2)
+ps2.v3 <- prune_samples(sample_data(ps2.v1v3)$VisitCode == 1030, ps2.v1v3)
+ps2.v2 #Numbers at visit 2, clean
+ps2.v3 #Numbers at visit 3, clean
+
+
+draw.triple.venn(area1 = 242, area2 = 75, area3 = 76, n12 = 3176, n23 = 3323, n13 = 3182, n123 = 3096, category = c("sample1", "sample2", "sample3"), lty = "blank", fill = c("skyblue", "pink1", "mediumorchid"), cex=2, cat.cex = 2, cat.fontfamily = rep("serif", 3))
+
+
+
+##Standardize abundances to the median sequence depth
+total <- median(sample_sums(ps2.v1v2v3))
+#standf <- function(x, t = total) round(t * (x / sum(x)))
+#M.std <- transform_sample_counts(phy, standf)
+
+ps2.v1v2v3.f <- filter_taxa(ps2.v1v2.1, function(x) sum(x > 10) > (0.02*length(x)) | sum(x) > (0.001 * total), TRUE)
+prune_taxa(taxa_sums(ps2.v1v2v3.f) > 0, ps2.v1v2v3.f)
+
+library(metagenomeSeq)
+MGS=make_metagenomeSeq(ps2.v1v2.f)
+MGS
+
+##Random forest to detect taxa that are good predictors of BV
+#sub.index <- sample_names(ps2.v1v2.f)[sample_data(ps2.v1v2.f)[,"bvscat"] != "Intermediate"]
+#ps2.v1v2.f.temp <- prune_samples(sub.index, ps2.v1v2.f)
+#nsamples(ps2.v1v2.f.temp) #in agreement with tutorial
+
+RF.k(data = ps2.v1v2v3.f, var = "STI", ntree=10000, cv.fold=10, outDir = "Figures", Nfeatures.validation = 3, positive.class = "1020")
+
+bvscat.colors = c("Negative"="#CC79A7","Intermediate"="#56B4E9","BV"="#F0E442")
+colours = list(bvscat=bvscat.colors)
+a = super.fitZig.kv(physeq = ps2.v1v2.f,factor = "VisitCode",outDir = "Figures",FileName =c("1_25FC_0.2_bvscat_taxa_merged"),
+                    heatmap.descriptor=c("hmap"), main=c("Visit 1 vs 2, taxa merged"), subt=c("subt = FDR < 0.05,|coeff| >= 1.25, >20%+ in either group"),
+                    ordered=TRUE, p=0.05, FC = 1.25, perc=0.2, extra.cols = c("STI"))
+
+b = super.fitZig.kv(physeq = ps2.v1v2.f,factor = "VisitCode",outDir = "Figures",FileName =c("1_25FC_0.2_vis_1vs2_OTUs"),
+                    heatmap.descriptor=c("tax_annot"), main=c("Visit 1 vs 2, taxa merged"), subt=c("subt = FDR < 0.05,|coeff| >= 1.25, >20%+ in either group"),
+                    ordered=TRUE, p=0.05, FC = 1.25, perc=0.2, extra.cols = c("Inflammation"))
+
+
+#ps2.v1.cst <- ps2.v1
+#head(taxa_names(ps2.v1v2.cst))
+
+#Shorter names for taxa (instead of sequences)
+full.taxa.names <- taxa_names(physeq)
+my.taxa.names <- data.frame(full.taxa.names, paste0("Seq", seq(1:length(full.taxa.names))))
+names(my.taxa.names) <- c("Taxa", "ShortName")
+taxa_names(ps2.v1.cst) <- my.taxa.names$ShortName 
+
+#Agglomerate at species level
+ps2.v1.cst.glom.Species <- tax_glom(ps2.v1.cst, taxrank = "Species")
+ps2.v1.cst.glom.Species.ra <- transform_sample_counts(ps2.v1.cst.glom.Species, function(x) round(100 * x/sum(x)))
+#tax_table(ps2.v1v2.cst.glom.Species) <- tax_table(ps2.v1v2.cst.glom.Species)[c(1:7)] #get rid of strain column which now contains only NAs
+#otu_table(ps1.cst)@.Data[1:5, 1:5] #View some of the data in the OTU table
+
+
+#tax_table(ps2.v1v2.cst.glom.Species) <- tax_table(ps2.v1v2.cst.glom.Species)[c(1:7)] #get rid of strain column which now contains only NAs
+#otu_table(ps1.cst)@.Data[1:5, 1:5] #View some of the data in the OTU table
+
+# distObj <- phyloseq::distance(ps2.v1.cst.glom.Species.ra, method="bray")
+# #Mclust Model
+# BIC <- mclustBIC(scale(distObj), G = 4)
+# #plot(BIC) #plot bic to see how model was arrived at
+# 
+# mclustObj <- Mclust(scale(distObj), x = BIC)
+# 
+# #mc <- Mclust(samdist)            # Model-based-clustering
+# summary(mclustObj)                 # Print a summary
+# 
+# mclustObj$modelName                # Optimal selected model ==> "VVV"
+# mclustObj$G                        # Optimal number of cluster => 3
+# #head(mclustObj$z, 30)              # Probality to belong to a given cluster
+# #head(mclustObj$classification, 30) # Cluster assignement of each observation
+# #class(mclustObj$classification)
+# 
+# mclust.classif.v1 <- mclustObj$classification
+# 
+# sample_data(ps2.v1.cst.glom.Species.ra)$CSTs <- factor(mclust.classif.v1, levels = unique(sort(mclust.classif.v1)), labels = paste0("CT", seq(length(unique(sort(mclust.classif.v1))))))
+
+ps.cst.glom.Species.ra <- ps2.v3.cst.glom.Species.ra
+df.ps.cst.glom.Species.ra <- data.frame(sample_data(ps.cst.glom.Species.ra))
+top25 <- names(sort(taxa_sums(ps.cst.glom.Species.ra), decreasing=T))[1:25]
+ps.cst.glom.Species.ra.top25 <- prune_taxa(top25, ps.cst.glom.Species.ra)
+taxa.order <- names(sort(taxa_sums(ps.cst.glom.Species.ra.top25)))
+
+
+sample.order <- rownames(sample_data(ps.cst.glom.Species.ra.top25)[order(get_variable(ps.cst.glom.Species.ra, "CSTs"))])
+hm <- plot_heatmap.2(ps.cst.glom.Species.ra.top25, taxa.label="Species", sample.order=sample.order, taxa.order=taxa.order)
+hm <- hm + theme(axis.title.x = element_text(size=10),
+    axis.title.y = element_text(size=10),
+    axis.text.x = element_text(size=7),
+    axis.text.y = element_text(size=7),
+    plot.title = element_text(size=8),
+    legend.text = element_text(size=7),
+    legend.title = element_text(size=8),
+    # legend.margin = unit(c(0.1,0.1,0.1,0.1),"mm"),
+    # legend.key.height = unit(1, "in"),
+    legend.key.width = unit(0.15, "in"),
+    plot.margin=unit(c(0,0,0,0),"mm"))
+
+CSTColors <- brewer.pal(6,"Paired")[c(1,2,3,4)] # Length 5 for consistency with pre-revision CT+ coloration
+CSTs <- as.character(c("CT1", "CT2", "CT3", "CT4"))
+names(CSTColors) <- CSTs
+CSTColorScale <- scale_colour_manual(name = "CSTs", values = CSTColors[1:4])
+CSTFillScale <- scale_fill_manual(name = "CSTs", values = CSTColors[1:4])
+
+### CHANGING SPECIES TO TAXA ON YLABEL
+df.ps.cst.glom.Species.ra <- df.ps.cst.glom.Species.ra[sample.order,] #resolve
+df.ps.cst.glom.Species.ra$index <- seq(1,nsamples(ps.cst.glom.Species.ra.top25))
+
+hcb <- make_hcb(df.ps.cst.glom.Species.ra, "CSTs", name="CSTs", fillScale = CSTFillScale)
+hcb <- hcb + annotate("text", x=tapply(df.ps2.v1.cst.glom.Species.ra$index, df.ps.cst.glom.Species.ra[,"CSTs",drop=T], mean), y=1,
+label=levels(df.ps.cst.glom.Species.ra[,"CSTs",drop=T]), size=2)
+
+
+
+Chl <- make_hcb(df.ps.cst.glom.Species.ra, "Chlamydia", name="Chlamydia",
+                     fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="tan4")))
+Gon <- make_hcb(df.ps.cst.glom.Species.ra, "Gonorrhoea", name="Gonorrhoea",
+                     fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="green4")))
+Tri <- make_hcb(df.ps.cst.glom.Species.ra, "Trichomoniasis", name="Trichomoniasis",
+                     fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="yellow4")))
+Cand <- make_hcb(df.ps.cst.glom.Species.ra, "Candidiasis", name="Candidiasis",
+                     fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="tomato4")))
+inf <- make_hcb(df.ps.cst.glom.Species.ra, "Inflammation", name="Inflammation",
+                     fillScale = scale_fill_manual(values=c("0"="papayawhip", "1"="darkred")))
+bvscores <- make_hcb(df.ps.cst.glom.Species.ra, "bvscat", name="Nuggent Score",
+                     fillScale = scale_fill_manual(values=c("Negative"="white", "Intermediate"="grey60", "BV"="maroon")))
+
+inf <- inf + theme(axis.text.y = element_text(size=8, face="bold", color="grey60"))
+Chl <- Chl + theme(axis.text.y = element_text(size=8, face="bold", color="tan4"))
+Gon <- Gon + theme(axis.text.y = element_text(size=8, face="bold", color="green4"))
+Tri  <- Tri + theme(axis.text.y = element_text(size=8, face="bold", color="yellow4"))
+Cand <- Cand + theme(axis.text.y = element_text(size=8, face="bold", color="tomato4"))
+
+Fig.v1 <- mush(hm, list(Chl, Gon, Tri, Cand, inf, bvscores, hcb))
+grid.newpage()
+grid.draw(Fig.v1)
+
+
+#-----
+
+heatmap.2(dt.ps1.cyto.melis.scale.t,
+          hclustfun = hclust2,
+          distfun=dist2,
+          trace = "none")
+
+#Save our existing heatmap as "x"
+x <- heatmap.2(dt.ps1.cyto.melis.scale.t,
+               hclustfun = hclust2,
+               distfun=dist2)  
+
+xc<- x$colDendrogram #retreive the column dendrogram from x
+xc_re <- all_couple_rotations_at_k(xc, k=3)[[2]] # flip a branchpoint
+
+
+###From cytokine section, needs to be fixed to work properly, second part was being adapted based on Melis#####
+#```{r eval=FALSE, include=FALSE}
+### Cytokine heatmap, San
+# ## Add Cytokine PC1 to sample metadata 
+# sample_data(ps1.cst.glom.Species.ra.top25)$cPC1 <- pcs_samples$Dim.1
+# 
+# ## Extract metada from phyloseq object
+# df.cyto <- data.frame(sample_data(ps1.cst.glom.Species.ra.top25))
+# df.cyto.scale <- scale(df.cyto[, c(23:70)])
+# df.cyto.scale.wPC1 <- cbind(df.cyto.scale, df.cyto[, 78])
+# colnames(df.cyto.scale.wPC1)[49] <- "PC1"
+# 
+# df.cyto.scale.wPC1[c(1:48)][df.cyto.scale.wPC1[c(1:48)] > 3 | df.cyto.scale.wPC1[c(1:48)] < -3] <- NA
+# 
+# ##Optional step: remove all rows with NAs (did not help much)
+# df.cyto.scale.wPC1.id <- cbind(SampleID = df.cyto[,"SampleID"], df.cyto.scale.wPC1) #First add id column
+# 
+# df.cyto.scale.wPC1.noNA <- df.cyto.scale.wPC1.id[complete.cases(df.cyto.scale.wPC1.id), ]
+# 
+# df.cyto.scale.wPC1.noNA.t <- t(df.cyto.scale.wPC1.noNA)
+# 
+# 
+# 
+# #df.cyto <- df.cyto[order(df.cyto$cPC1),]
+# ord.x <- hclust(dist(df.cyto.scale.wPC1.noNA.t, method = "manhattan"), method = "complete")$order #manhattan good for highly dimensional data
+# ord.y <- hclust(dist(t(df.cyto.scale.wPC1.noNA), method = "manhattan"), method = "complete")$order
+# #df.cyto$index <- seq(1,nsamples(ps1.cst.glom.Species.ra.top25))
+# df.cyto.scale.wPC1.noNA <- data.frame(df.cyto.scale.wPC1.noNA)
+# df.cyto.scale.wPC1.noNA$index <- seq(1:nrow(df.cyto.scale.wPC1.noNA))
+# 
+# ## Transform data to long format
+# chg.columns <- c(2:50)
+# df.cyto.scale.wPC1.noNA[,chg.columns] = apply(df.cyto.scale.wPC1.noNA[,chg.columns], 2, function(x) as.numeric(x));
+# df.cyto.scale.wPC1.noNA <- as.numeric(df.cyto.scale.wPC1.noNA[,c(2:50)])
+# 
+# mat.m1 <- melt(df.cyto.scale.wPC1.noNA[,-ncol(df.cyto.scale.wPC1.noNA)], id.vars = "SampleID")
+# colnames(mat.m1)[c(1, 2)] <- c("SampleID", "cytokine")
+# mat.m1$SampleID <- as.factor(mat.m1$SampleID)
+# mat.m1$cytokine <- as.factor(mat.m1$cytokine)
+# 
+# colNamesCytokine.df <- colnames(df.cyto.scale.wPC1[c(1:49)])
+# 
+# p <- ggplot(mat.m1, aes(SampleID, cytokine, fill = value)) + 
+#       geom_tile(colour="white", size=0.25) + 
+#       scale_fill_gradient2(low = "green", mid = "yellow", high = "red", na.value = "grey90") + 
+#       labs(x="Samples",y="Cytokines") + #Remove X and Y axis labels
+#       scale_x_discrete(limits=mat.m1$SampleID[ord.x]) +
+#       scale_y_discrete(limits=colNamesCytokine.df[ord.y]) +
+#       #coord_fixed() + #Maintain aspect ratio
+#       theme_grey(base_size=8) +
+#       theme(legend.position = "bottom",  axis.text.x=element_blank(), axis.ticks.x=element_blank()) + #No samples names on x axis
+#       #theme(legend.position = "bottom",  axis.text.x=element_text(angle = 90, hjust = 1)) + #Sample names on x-axis
+#       theme(plot.margin=unit(c(0.2,0.5,0,0),"lines")) #+
+#       #guides(fill=F) #This will just get rid of the legend
+# p
+# 
+# 
+# ##---different from below:
+# 
+# cytokine.df <- hcbdf[c(1,23:70)]
+# #cytokine.ps1.all <- readRDS("Metadata/dt.ps1.cyto.all.RDS")
+# cytokine.df <- cytokine.ps1.all[c(4:52)]
+# cytokine.df <- cytokine.df[order(df.cyto$cPC1), , drop = FALSE]
+# cytokine.ps1.all[c(4:52)][cytokine.ps1.all[c(4:52)] > 3.04 | cytokine.ps1.all[c(4:52)] < -3.04] <- NA
+# 
+# ##Optional step: remove all rows with NAs (did not help much)
+# cytokine.ps1.all.noNA <- cytokine.ps1.all[complete.cases(cytokine.ps1.all), ]
+# 
+# ## Cluster with hclust
+# ord.x <- hclust(dist(cytokine.ps1.all.noNA[c(4:51)], method = "manhattan"), method = "complete")$order
+# ord.y <- hclust(dist(t(cytokine.ps1.all.noNA[c(4:51)]), method = "manhattan"), method = "complete")$order
+# 
+# ## Transform data to long format
+# mat.m <- melt(cytokine.ps1.all.noNA[c(4:52)])
+# colnames(mat.m)[c(1, 2)] <- c("SampleID", "cytokine")
+# mat.m$SampleID <- as.factor(mat.m$SampleID)
+# mat.m$cytokine <- as.factor(mat.m$cytokine)
+# mat.m <- ddply(mat.m, .(cytokine), transform, rescale = scale(value, center = TRUE, scale = TRUE)) #from package plyr
+# 
+# ## Check structure of the melted object
+# str(mat.m)
+# 
+# ## Create vector of column names
+# colNamesCytokine.df <- colnames(cytokine.ps1.all.noNA[c(4:51)])
+# #colNamesCytokine.df <- colNamesCytokine.df[-length(colNamesCytokine.df)]
+# 
+# ## Draw heatmap using ggplot
+# p <- ggplot(mat.m, aes(SampleID, cytokine, fill = value)) + 
+#       geom_tile(colour="white", size=0.25) + 
+#       scale_fill_gradient2(low = "green", mid = "yellow", high = "red", na.value = "grey90") + 
+#       labs(x="Samples",y="Cytokines") + #Remove X and Y axis labels
+#       scale_x_discrete(limits=mat.m$SampleID[ord.x]) +
+#       scale_y_discrete(limits=colNamesCytokine.df[ord.y]) +
+#       #coord_fixed() + #Maintain aspect ratio
+#       theme_grey(base_size=8) +
+#       theme(legend.position = "bottom",  axis.text.x=element_blank(), axis.ticks.x=element_blank()) + #No samples names on x axis
+#       #theme(legend.position = "bottom",  axis.text.x=element_text(angle = 90, hjust = 1)) + #Sample names on x-axis
+#       theme(plot.margin=unit(c(0.2,0.5,0,0),"lines")) #+
+#       #guides(fill=F) #This will just get rid of the legend
+# p
+# 
+# ## Prepare heatmap annotations
+# Chl <- make_hcb(df.cyto, "Chlamydia", name="Chlamydia", 
+#                 fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+# Gon <- make_hcb(df.cyto, "Gonorrhoea", name="Gonorrhoea", 
+#                 fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+# Tri <- make_hcb(df.cyto, "Trichomoniasis", name="Trichomoniasis", 
+#                 fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+# Cand <- make_hcb(df.cyto, "Candidiasis", name="Candidiasis", 
+#                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+# # 
+# hsv2 <- make_hcb(df.cyto, "HSV.2", name="HSV 2", 
+#                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+# inf <- make_hcb(df.cyto, "Inflammation", name="Inflammation", 
+#                 fillScale = scale_fill_manual(values=c("0"="grey90", "1"="darkred")))
+# bvscores <- make_hcb(df.cyto, "bvscat", name="Nuggent Score", 
+#                      fillScale = scale_fill_manual(values=c("Negative"="white", "Intermediate"="maroon", "BV"="grey60")))
+# 
+# cyto.pc1 <- make_hcb(df.cyto, "cPC1", name="cPC1", 
+#                      fillScale = scale_fill_gradient2(low = "green", mid = "yellow", high = "red"))
+# 
+# ## Set text color for annotation labels
+#  Chl <- Chl + theme(axis.text.y = element_text(color="tan4"))    
+#  Gon <- Gon + theme(axis.text.y = element_text(color="tan4"))
+#  Tri  <- Tri + theme(axis.text.y = element_text(color="tan4")) 
+#  Cand <- Cand + theme(axis.text.y = element_text(color="tan4"))
+#  inf <- inf + theme(axis.text.y = element_text(color="deepskyblue4"))
+#  hsv2 <- hsv2 + theme(axis.text.y = element_text(color="firebrick3"))
+#  bvscores <- bvscores + theme(axis.text.y = element_text(color="firebrick3"))
+#  cyto.pc1 <- cyto.pc1 + theme(axis.text.y = element_text(color="firebrick3")) +
+#                       geom_tile(color = "white")
+#  
+# ## Combine heatmap with annotations and draw
+# Fig4 <- mush(p, list(Chl, Gon, Tri, hsv2, inf, bvscores, cyto.pc1))
+# grid.newpage()
+# grid.draw(Fig4)
+
+```
+
+##Cord to create and save heatmap
+
+# png("results/BV_STI.png",    # create PNG for the heat map        
+#     width = 5*800,        # 5 x 300 pixels
+#     height = 5*400,
+#     res = 300,            # 300 pixels per inch
+#     pointsize = 13)        # smaller font size
+# col.samples <- 1:ncol(dt.ps1.cyto.melis.scale.t)
+# col.random.samples <- sample(col.samples,length(col.samples))
+# heatmap.2(dt.ps1.cyto.melis.scale.t[,order(dt.ps1.cyto.melis.scale.t["PC1",])],
+#           hclustfun = hclust2,
+#           distfun=dist2,
+#           trace="none",         # turns off trace lines inside the heat map
+#           col=my_palette,       # use on color palette defined earlier
+#           breaks=col_breaks,    # enable color transition at specified limits
+#           sepcolor="gray70",    # determines the separation color
+#           colsep=0:ncol(dt.ps1.cyto.melis.scale.t), # determines where column separators go
+#           rowsep=0:nrow(dt.ps1.cyto.melis.scale.t), # determines where row separators go
+#           sepwidth=c(0.01,0.01), # determines the width of the separators
+#           density.info="none", # turns off density plot inside color legend
+#           keysize = 1.5,
+#           Colv = F,
+#           dendrogram = "row",
+#           labCol = FALSE, #remove column names
+#           #Colv=xc_re # use our new flipped column dendrogram
+#           ColSideColors= BV
+# )
+# dev.off()
+
+
+undef <- top.cyto.pc1[(!top.cyto.pc1 %in% names(mt.ps1.cyto))] #check for values in one vector not in the other
+
+res.dds.ps2.v1v2v3 <- results(dds.ps2.v1v2v3, contrast = list(c("VisitCode1020.STI1"),c("VisitCode1030.STI1"))) #Contrast interactions in deseq
+
+### Heatmap with additional metadata based on K-Means clusters for evaluation. 
+
+```{r psa-heatmap, echo=FALSE}
+### CHANGING SPECIES TO TAXA ON YLABEL
+
+hcbdf <- data.frame(sample_data(ps1.cst.glom.Species.ra.top25))
+
+hcbdf <- hcbdf[sample.order,] #resolve
+hcbdf$index <- seq(1,nsamples(ps1.cst.glom.Species.ra.top25))
+hcb <- make_hcb(hcbdf, "classif", name="CT", fillScale = CSTFillScale)
+hcb <- hcb + annotate("text", x=tapply(hcbdf$index, hcbdf[,"classif",drop=T], mean), y=1,
+                      label=levels(hcbdf[,"classif",drop=T]), size=2)
+
+
+Chl <- make_hcb(hcbdf, "Chlamydia", name="Chlamydia", 
+                fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+Gon <- make_hcb(hcbdf, "Gonorrhoea", name="Gonorrhoea", 
+                fillScale = scale_fill_manual(values=c("0"="grey90", "1"="green4")))
+Tri <- make_hcb(hcbdf, "Trichomoniasis", name="Trichomoniasis", 
+                fillScale = scale_fill_manual(values=c("0"="grey90", "1"="yellow4")))
+Cand <- make_hcb(hcbdf, "Candidiasis", name="Candidiasis", 
+                 fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tomato4")))
+inf <- make_hcb(hcbdf, "Inflammation", name="Inflammation", 
+                fillScale = scale_fill_manual(values=c("0"="grey90", "1"="darkred")))
+bvscores <- make_hcb(hcbdf, "bvscat", name="Nuggent Score", 
+                     fillScale = scale_fill_manual(values=c("Negative"="white", "Intermediate"="maroon", "BV"="grey60")))
+
+Chl <- Chl + theme(axis.text.y = element_text(size=8, face="bold", color="tan4"))    
+Gon <- Gon + theme(axis.text.y = element_text(size=8, face="bold", color="green4"))
+Tri  <- Tri + theme(axis.text.y = element_text(size=8, face="bold", color="yellow4")) 
+Cand <- Cand + theme(axis.text.y = element_text(size=8, face="bold", color="tomato4"))
+
+
+Fig3 <- mush(hm, list(Chl, Gon, Tri, Cand, inf, bvscores, hcb))
+grid.newpage()
+grid.draw(Fig3)
+
+```
+
+#sample_data(ps1.cst.glom.Species)$classif <- factor(sample_data(ps1.cst.glom.Species)$classif, levels = c("CT4", "CT1", "CT2", "CT3"), labels #= c("CT1", "CT2", "CT3", "CT4"))
+
+
+mySpecies <- as(tax_table(ps1.cst.glom.Species.ra.top25)[, "Species"], "character")
+mySpecies <- mySpecies[c(3,1,2,4:16)]
+tt <- data.frame(tax_table(ps1.cst.glom.Species.ra.top25))
+tt <- left_join(data.frame(Species=mySpecies),tt,by="Species")
+rownames(tt) <- top25
+tax_table(ps1.cst.glom.Species.ra.top25) <- tax_table(matrix(tt)) 
+
+# cestimate_richness <- function(physeq, measures = c("Observed", "Shannon", "simpson")){
+#   div <- estimate_richness(physeq, measures = measures)
+#   div$ShannonLgT <- log10(div$Shannon + 1)
+#   sample_data(ps1.cst) <- cbind(sample_data(physeq), div)
+#   return(physeq)
+# }
+
+### Cytokine correlations and related analyses
+
+```{r}
+##Spearman’s rho correlation coefficients between CVL cytokines (using log10 normalizedconcentrations of the top 16 contributing cytokines). 
+library(Hmisc)
+#head(pca_data_ct[c(13:60)])
+mt.ps1.cyto <- pca_data_ct[c(14:60)]
+
+top.cyto.pc1 <- c("TNF.a", "RANTES", "IL.1b", "HGF", "MIG", "VEGF", "Eotaxin", "SCF", "IL.16", "LIF", "IL.9", "G.CSF", "M.CSF",  "IFN.a2", "IP.10", "IL.12p70", "IL.4", "IL.1a", "IFN.g", "IL.10" ,"IL.6","IL.8","MCP.1","MIP.1a","MIP.1b")
+
+
+mt.ps1.cyto.pc1.top <- mt.ps1.cyto[, top.cyto.pc1]
+
+rownames(mt.ps1.cyto.pc1.top) <- rownames(pca_data_ct$SampleID)
+
+dt.ps1.cyto.cm <- rcorr(as.matrix(mt.ps1.cyto.pc1.top), type = "spearman")
+
+flatMatrix <- flattenCorrMatrix(dt.ps1.cyto.cm$r, dt.ps1.cyto.cm$P) 
+write.table(flatMatrix, file="results/flatMatrix.txt") 
+
+library(corrplot)
+
+#corrplot::corrplot(dt.ps1.cyto.cm$r, 
+#         p.mat = dt.ps1.cyto.cm$P, sig.level = 0.001, insig = "blank", method = "number", number.cex = .7)
+# The areas and colors of circles show the absolute value of the corresponding correlation coefficients.
+
+corrplot::corrplot(dt.ps1.cyto.cm$r, 
+                   p.mat = dt.ps1.cyto.cm$P, sig.level = 0.001, insig = "blank", type = "upper")
+
+# Correlation between PC1 and Cytokines
+pca_data_ct.complete <- pca_data_ct[complete.cases(pca_data_ct), ]
+cor(pca_data_ct.complete$PC1, pca_data_ct.complete[, 15:62])
+
+```
+
+
+fviz_pca_biplot(cyto.spec.pca,
+                #individuals 
+                geom.ind = "point", # show points only (but not "text"),
+                #pointshape = 21, pointsize = 2,
+                #fill.ind = dt.ps1.cst.sample_data$classif, # color by groups
+                habillage = corrData$classif,
+                col.var = "black", #
+                #variables
+                alpha.var =  "cos2", 
+                # col.var = "black",
+                #gradient.cols = getPalette(colourCount),
+                #gradient.cols = "YlOrRd",
+                addEllipses = TRUE, # Concentration ellipses
+                ellipse.level=0.95,
+                palette = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C"),
+                legend.title = list(habillage = "CSTs"),
+                title = "PCA plot Showing the Relationship Between Bacteria and Proinflammatory Cytokines")
+
+
+dt.ps1.cyto <- data.frame(sample_data(ps1.cst.glom.Species)[, c(23:70)])
+dt.ps1.cyto.scale <- scale(dt.ps1.cyto, center = TRUE, scale = TRUE)
+
+##Run PCA
+dt.ps1.cyto.pca <- PCA(dt.ps1.cyto.scale, scale.unit = FALSE, graph = FALSE) ##Library FactoMineR
+
+##Extract PC1
+pcs_samples <- data.frame(dt.ps1.cyto.pca$ind$coord)
+#head(pcs_samples)
+
+dt.ps1.cst.sample_data <- cbind(dt.ps1.cst.sample_data, PC1 = pcs_samples$Dim.1,  PC2 = pcs_samples$Dim.2)
+pca_data <- dt.ps1.cst.sample_data[, c("CSTs", "Trichomoniasis", "Gonorrhoea", "Chlamydia", "HSV.2", "STI", "Inflammation", "PSA", "PC1", "PC2")]
+pca_data$SampleID <- rownames(pca_data)
+
+pca_data_ct <- merge(pca_data, dt.ps1.cyto.top, by = "SampleID")
+
+library(writexl)
+xRowNos <- c(84,30,123,60,21,93,42,54,81,33,66,9,105,102,6,90,36,108,3,87,75,99,15,126,45,120,51,69,39,111,63,96,129,117,18,114,27,12,78,24,48,72)
+df <- data.frame(sample_data(ps2.v1v2v3.f))
+df <- subset(df, RowNo %in% xRowNos)
+df <- df[, c("ParticipantID", "VisitCode", "RowNo")]
+write_xlsx(df, "results/slopeIDs.xlsx")
+
+
+
+#colourCount = length(dim(cyto.spec)[2])
+#getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+
+library("factoextra")
+fviz_nbclust(gs$Tab, kmeans, method = "gap_stat")
+
+
+## Tue. 13th August, 2019
+
+#Define row names for sequence table
+#row.names(seqtab) <- gsub("_.\\d*_.\\d*", "", row.names(seqtab)) #Names need to match those of sample data/mapping file
+seqtab_rownames <- cbind(rownames(seqtab), gsub("_.\\d*_.\\d*", "", row.names(seqtab)))
+colnames(seqtab_rownames) <- c("seqNames", "seqPart1")
+
+##c(1:79,156-222) - Do not have a visit component in the name, treat separately
+seqtab_rownames1 <- data.frame(seqtab_rownames[c(1:79,156:222), ])
+seqtab_rownames1$seqPart1 <- as.character(seqtab_rownames1$seqPart1)
+
+
+## Have the visit component
+seqtab_rownames2 <- data.frame(seqtab_rownames[c(80:155,223:371), ])
+seqtab_rownames2$pid <- sapply(str_split(seqtab_rownames2$seqNames, "-", n = 2, simplify = FALSE), `[`, 1) #participant id
+seqtab_rownames2$vid <- sapply(str_split(seqtab_rownames2$seqNames, "_", n = 2, simplify = FALSE), `[`, 1)#participant visit id
+seqtab_rownames2$vid <- sapply(str_split(seqtab_rownames2$vid, "-", n = 2, simplify = FALSE), `[`, 2)
+seqtab_rownames2$seqId <- ifelse(seqtab_rownames2$vid == 1000, paste0(seqtab_rownames2$pid,1), 
+                                 ifelse(seqtab_rownames2$vid == 1020, paste0(seqtab_rownames2$pid,2),
+                                                                        paste0(seqtab_rownames2$pid,3)))
+seqtab_rownames2 <- seqtab_rownames2[c(1,5,3,4)]
+colnames(seqtab_rownames2)[2] <- "sid"
+
+## Aub run 3 sequence names.
+library(readr)
+Aub3seqNames <- read_csv("metadata/seqNames.txt")
+View(Aub3seqNames)
+
+Aub3seqNames$pid <- sapply(str_split(Aub3seqNames$seqNames, "-", n = 2, simplify = FALSE), `[`, 1)
+Aub3seqNames$sid <- sapply(str_split(Aub3seqNames$seqNames, "_", n = 4, simplify = FALSE), `[`, 2)
+Aub3seqNames$vid <- sapply(str_split(Aub3seqNames$seqNames, "_", n = 4, simplify = FALSE), `[`, 1)
+Aub3seqNames$vid <- sapply(str_split(Aub3seqNames$vid, "-", n = 2, simplify = FALSE), `[`, 2)
+Aub3seqNames$seqId <- ifelse(Aub3seqNames$vid == 1000, paste0(Aub3seqNames$pid,1), 
+                                 ifelse(Aub3seqNames$vid == 1020, paste0(Aub3seqNames$pid,2),
+                                        paste0(Aub3seqNames$pid,3)))
+Aub3seqNames$seqPart1 <- paste0(Aub3seqNames$pid,"_",Aub3seqNames$sid)
+
+## Joining the two tables
+Aub3seqNamesC <- Aub3seqNames %>%  inner_join(seqtab_rownames1, by = "seqPart1")
+Aub3seqNamesC <- Aub3seqNamesC[c(4,6,2,5)]
+colnames(Aub3seqNamesC)[c(1:2)] <- c("seqNames", "sid")
+
+
+## Next
+
+resolved <- Aub3seqNamesC$seqPart1
+unresolved <- subset(seqtab_rownames1, !seqtab_rownames1$seqPart1 %in% resolved)
+
+library(readxl)
+AllSeqNames <- read_excel("/temp/Data_Analysis/Andile/cominded3/metadata/SampleNames.xlsx") 
+AllSeqNames$seqNames <- gsub("_L001","",AllSeqNames$seqNames)
+
+unresolved$seqNames <- as.character(unresolved$seqNames)
+RunxSeqNames <- unresolved %>% inner_join(AllSeqNames, by = "seqNames")
+RunxSeqNames <- RunxSeqNames[c(1,3:5)]
+
+## Combine Aub3seqNamesC, RunxSeqNames and seqtab_rownames2
+seqdetails <- rbind(Aub3seqNamesC, RunxSeqNames, seqtab_rownames2)
+View(seqdetails)
+
+seqDetailsDup <- seqdetails[duplicated(seqdetails$seqNames),]
+seqDetailsDupIds <- seqDetailsDup$seqNames
+
+seqDetailsDupPairs <- seqdetails[seqdetails$seqNames %in% seqDetailsDupIds,]
+
+seqdetails <- distinct(seqdetails)
+saveRDS(seqdetails, "metadata/seqDetails.RDS")
+
+## Finally reorder
+seqtab_rownames <- data.frame(seqtab_rownames)
+seqtab_rownames$seqNames <- as.character(seqtab_rownames$seqNames)
+sequences <- inner_join(seqtab_rownames, seqdetails, by = "seqNames")
+
+## Extract the id missing in one vector from another
+xx <- sequences$seqNames
+yy <- seqtab_rownames$seqNames
+print(yy[which(!yy %in% xx)])
+
+rownames(seqtab) <- sequences$sid
+
+## sequences without sample data
+mapping.data.SampleID <- mapping.data$SampleID
+
+#SampleID in sequence list but not in metadata file
+seqs.nosampledata <- mapping.data.SampleID[which(!mapping.data.SampleID %in% sequences$SampleID)]
+#SampleID in metadata but has no sequence
+mapping.data.noseqs <- mapping.data.SampleID[which(!sequences$SampleID %in% mapping.data.SampleID)]
+View(mapping.data.noseqs)
+View(seqs.nosampledata)
+## Now add sequence information to the sample data file.
+sequences$seqPart1 <- NULL
+colnames(sequences) <- c("sequence", "SampleID", "ParticipanID", "VisitCode")
+mapping.data2 <- inner_join(mapping.data, sequences, by = "SampleID")
+View(mapping.data2)
+
+## Check the columns for consistence. Get the common columns in both tables and see how they are consistent
+tempMd <- mapping.data2[c(1:4,75:77)]
+View(tempMd)
+
+
+## Friday, 16th August 2019
+
+## Trace missing sequences
+
+sequence_ids <- rownames(seqtab)
+
+# Sequences not in sample metadata list
+sequences_not_metadata <- sequence_ids[!sequence_ids %in% mapping.data$SampleID]
+
+# Sample ids without sequences
+sampleIds_wo_seqs <- mapping.data.SampleID[!mapping.data$SampleID %in% sequence_ids]
+
+# Add missing metadata
+df[nrow(df) + 1,] = list(hello="hallo",goodbye="auf wiedersehen", volume=20.2)
+
+#mapping.data[nrow(mapping.data) + 1,] = list(SampleID=1202232, ParticipantID=120223, VisitCode=1020)
+writexl::write_xlsx(mapping.data, "metadata/mappings_main.xlsx")
+
+## Saturday 17th August 2019
+
+## Get all sequence names and check for any duplicates
+library(readr)
+all_seq_names <- read_csv("/Volumes/LaCie/Storage/Microbiome/Sinaye/andile_final/all_seq_names.txt", col_names = FALSE)
+View(all_seq_names)
+
+# add visit code
+all_seq_names$visitcode <- NA
+all_seq_names$visitcode <- ifelse(grepl("1000", all_seq_names$X1), 1, 
+                                  ifelse(grepl("1020", all_seq_names$X1), 2,
+                                         ifelse(grepl("1030", all_seq_names$X1), 3, 1)))
+all_seq_names$sampleid <- substr(all_seq_names$X1, start = 1, stop = 6)
+all_seq_names$sequenceid <- paste0(all_seq_names$sampleid, all_seq_names$visitcode)
+any(duplicated(all_seq_names$sequenceid))
+which(duplicated(all_seq_names$sequenceid))
+duped_seqids <- all_seq_names$sequenceid[duplicated(all_seq_names$sequenceid)]
+
+## Cytokine details 
+library(readxl)
+cytokine_for_new_ids <- read_excel("metadata/cytokine_for_new_ids.xlsx")
+View(cytokine_for_new_ids)
+
+cytokine_for_new_ids_log10 <- cbind(cytokine_for_new_ids[, c(1:3)], log10(cytokine_for_new_ids[, c(4:51)]))
+
+writexl::write_xlsx(cytokine_for_new_ids_log10, "metadata/cytokine_for_new_ids_log10.xlsx")
+
+## save updated r object
+
+library(readxl)
+mappings_main <- read_excel("metadata/mappings_main.xlsx")
+View(mappings_main)
+
+mappings_main$sequence <- gsub("_L001", "", mappings_main$sequence)
+
+rownames(mappings_main) <- mappings_main$sequence
+
+saveRDS(mappings_main, "metadata/mappings_main2.RDS")
+
+df <-  cbind(A = mappings_main$sequence , B = rownames(seqtab))
+
+## Process seq names from otu table rows
+all_seq_names <- data.frame(cbind(seqNames = rownames(seqtab), visitcode = NA))
+#View(all_seq_names)
+
+# add visit code
+#all_seq_names$visitcode <- NA
+all_seq_names$visitcode <- ifelse(grepl("1000", all_seq_names$seqNames), 1, 
+                                  ifelse(grepl("1020", all_seq_names$seqNames), 2,
+                                         ifelse(grepl("1030", all_seq_names$seqNames), 3, 1)))
+all_seq_names$sampleid <- substr(all_seq_names$seqNames, start = 1, stop = 6)
+all_seq_names$sequenceid <- paste0(all_seq_names$sampleid, all_seq_names$visitcode)
+any(duplicated(all_seq_names$sequenceid))
+which(duplicated(all_seq_names$sequenceid))
+duped_seqids <- all_seq_names$sequenceid[duplicated(all_seq_names$sequenceid)]
+
+
+## Recurred Ids
+# Ids of participants who were bv intermediate or positive, had cleared in visit2 and tested positive or intermediate in visit 3
+
+df.ps2.v1v2v3 <- data.frame(sample_data(ps2.v1v2v3))
+bvIds <- df.ps2.v1v2v3$ParticipantID[df.ps2.v1v2v3$VisitCode == 1000 & df.ps2.v1v2v3$bvscat %in% c("BV", "Intermediate")]
+bvIdCuredinVisit2 <- df.ps2.v1v2v3$ParticipantID[df.ps2.v1v2v3$VisitCode == 1020 & df.ps2.v1v2v3$ParticipantID %in% bvIds & df.ps2.v1v2v3$bvscat %in% c("Negative")]
+bvIdRecuredVisit3 <- df.ps2.v1v2v3$ParticipantID[df.ps2.v1v2v3$VisitCode == 1030 & df.ps2.v1v2v3$ParticipantID %in% bvIdCuredinVisit2 & df.ps2.v1v2v3$bvscat %in% c("BV", "Intermediate")]
+saveRDS(bvIdRecuredVisit3, "results/recurredIds.RDS")
+
+## Export sequences to fasta
+seqs.all <- data.frame(cbind(sequence = rownames(tax_final), seqId = paste0("seq", seq_along(1 : length(rownames(tax_final))))))
+
+#write sequences to fasta file
+seqinr::write.fasta(as.list(seqs.all$sequence), names = seqs.all$seqId, file.out = "dada2-Chimera-Taxonomy/sequences.fasta")
+
+#write sequences to tab file seperated by new line
+write.table(seqs.all$sequence, file = "dada2-Chimera-Taxonomy/sequences.tab", sep = "\n", row.names = F, col.names = F, quote = F)
+
+
+
+### Create runs variable
+#run1
+st1 <- readRDS("1/seqtab_final.RDS")
+r1 <- data.frame(cbind(sequence = rownames(st1), SeqRun = 1))
+rm(st1)
+
+#run 2
+st2 <- readRDS("2/seqtab_final.RDS")
+r2 <- data.frame(cbind(sequence = rownames(st2), SeqRun = 2))
+rm(st2)
+
+#run3
+st3 <- readRDS("3/seqtab_final.RDS")
+r3 <- data.frame(cbind(sequence = rownames(st3), SeqRun = 3))
+rm(st3)
+
+#run4
+st4 <- readRDS("4/seqtab_final.RDS")
+r4 <- data.frame(cbind(sequence = rownames(st4), SeqRun = 4))
+rm(st4)
+
+#run5
+st5 <- readRDS("5/seqtab_final.RDS")
+r5 <- data.frame(cbind(sequence = rownames(st5), SeqRun = 5))
+rm(st5)
+
+#run6
+st6 <- readRDS("6/seqtab_final.RDS")
+r6 <- data.frame(cbind(sequence = rownames(st6), SeqRun = 6))
+rm(st6)
+
+#run7
+st7 <- readRDS("7/seqtab_final.RDS")
+r7 <- data.frame(cbind(sequence = rownames(st7), SeqRun = 7))
+rm(st7)
+
+runInfo <- rbind(r1, r2, r3, r4, r5, r6, r7)
+runInfo$sequence <- as.character(runInfo$sequence)
+runInfo$visitcode <- ifelse(grepl("1000", runInfo$sequence), 1, 
+                     ifelse(grepl("1020", runInfo$sequence), 2,
+                            ifelse(grepl("1030", runInfo$sequence), 3, 1)))
+runInfo$ParticipantID <- substr(runInfo$sequence, start = 1, stop = 6)
+runInfo$SampleID <- paste0(runInfo$ParticipantID, runInfo$visitcode)
+runInfo <- runInfo[c("SampleID", "sequence", "SeqRun")]
+
+mp <- readRDS("metadata/mappings_main2.RDS")
+mp$sequence <- NULL
+mp <- mp[ !mp$SampleID %in% "1201933",] #
+#mp[nrow(mp) + 1, ] <- c("1202273", "120227", "1030", "","","0","0","0","0","","0","6","0","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","Intermediate","0")
+
+mapping.data.run <- inner_join(mp, runInfo, by = "SampleID")
+rownames(mapping.data.run) <- mapping.data.run$sequence
+saveRDS(mapping.data.run, "metadata/mappings_main3.RDS")
+
+
+# take a random sample of size 50 from a dataset seqs.all
+# sample without replacement
+mySampleSeqs <- seqs.all[sample(1:nrow(seqs.all), 50,
+                          replace=FALSE),]
+
+table(tax_final[, "Genus"][tax_final[, "Genus"] == "Lactobacillus"])
+table(tax_final[, "Species"][tax_final[, "Genus"] == "Lactobacillus"])
+
+
+#ids9 <- readRDS("results/recurredIds.RDS")
+#ps.ids9 <- prune_samples(sample_data(ps2.v1v2v3.f)$ParticipantID %in% ids9, ps2.v1v2v3.f)
+
+#df17.collapse <- 
+#colourCount = length(unique(df9$Sample))
+#getPalette = colorRampPalette(brewer.pal(11, "Spectral")) #display.brewer.all()
+#Bar plot
+#customPalette <- c("navy blue", "cadetblue1", "#E41A1C", "lime green", "yellow", "chocolate", "yellow green", "#576B9A", "#3F78B0", "violet", "#3B889F", "#3E8F90", "#419681", "#449C73", "#47A364")
+
+#customPalette2 <- c("Gardnerella vaginalis"="#E41A1C", 
+# "Lactobacillus crispatus"="#33cc66",
+# "Lactobacillus iners"="#ffcc66", 
+# "Lactobacillus jensenii"="#009966",
+# "Other"="#996699")
+
+
+#library(ggplot2)
+#library(phyloseq)
+#library(data.table)
+#data(GlobalPatterns)
+# Remove OTUs not 3 greater than 3
+#keepTaxa = apply(X = as(otu_table(GlobalPatterns), "matrix") > 3L,
+#                 MARGIN = 1, FUN = sum) >= 3L
+#phy = prune_taxa(keepTaxa, GlobalPatterns)
+# get abundance in %
+#phy <- transform_sample_counts(ps2.v3.cst.glom.Species.ra, function(x) x/sum(x))
+
+#gardnerella in that redish color...change all lacto to greenish colors....atopobium to navy....the rest to yellowish degrees
+#A. vaginae #E41A1C  
+#D. micraerophilus #CC2731
+#G.vaginalis #B53546
+#L. crispatus #9D425B
+#L. iners #865070
+#L. jensenii #6E5D85
+#L. vaginalis #6E5D85
+#P. anaerobius #576B9A
+#P. amnii #3F78B0
+#P. bivia  #3882AE
+#P. timonensis #3B889F
+#S. monliformis #3E8F90
+#S. agalactiae #419681
+#S. anginosus #449C73
+#S. montpellierensis #47A364
+
+# boxplot
+ggplot(dat[Abundance > 0],
+       aes(x=Species,
+           y=Abundance)) + 
+  geom_boxplot() + 
+  coord_flip() +
+  scale_y_log10()
+
+## If the factor levels are not automatically in the correct order, re-order them as follow:
+my_data$group <- ordered(my_data$group,
+                           levels = c("ctrl", "trt1", "trt2"))
+
+
+## Begin with raw cytokines to assess the difference between standardized (scale) log transformed values and non-standardized log transformed
+## Values consistent so, keeping the cytokines values already in the phyloseq object.
+rawCytos <- readRDS("metadata/cytokines_ps0.RDS")
+cytoNames <- gsub("-", ".", names(rawCytos)[4:51])
+cytoNames <- gsub("FGF basic", "FGF.basic", cytoNames)
+names(rawCytos)[4:51] <- cytoNames
+
+## Log transform
+rawCytos[4:51] <- log10(rawCytos[4:51])
+
+sampleIDs <- data.frame(sample_data(ps2.v1.cyto))$SampleID
+rawCytos_v1 <- rawCytos[rawCytos$SampleID %in% sampleIDs, ]
+
+sampleIDs[which(!sampleIDs %in% rawCytos_v1$SampleID)]
+
+
+#pairwise.wilcox.test(dt.ps1.cst.rich$Shannon, dt.ps1.cst.rich$agecat, p.adjust.method="fdr")
+ggplot(dt.ps1.cst.rich, aes(agecat, ShannonLgT,  color = agecat)) +
+  geom_boxplot() + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  ylab("Shannon (Log10 transformed)")
+table(dt.ps1.cst.rich$agecat)
+
+
+## Extract sequences and save to fasta - this will take even seqs with species - don't use
+#tax_final_en_seqs <- data.frame(cbind(sequence = rownames(tax_table(ps0.phylum.bact.f)), 
+#                                seqId = paste0("seq", seq_along(1: length(rownames(tax_table(ps0.phylum.bact.f)))))))
+
+#seqinr::write.fasta(as.list(tax_final_en_seqs$sequence), names = tax_final_en_seqs$seqId, file.out = "/temp/16S/blast/tax_final_en_seqs/tax_final_en_seqs_fil.fasta")
+
+
+#CSTsPallete <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C")
+
+#any(taxa_sums(ps1.cst.glom.Species) <= 0) double check to confirm that no taxa_sum == 0
+
+##Estimate richness
+#alpha.div <- estimate_richness(ps1.cst.glom.Species.ra, measures = c("Observed", "Shannon", "simpson"))
+#alpha.div$ShannonLgT <- log10(alpha.div$Shannon + 1)
+
+#sample_data(ps1.cst.glom.Species.ra) <- cbind(sample_data(ps1.cst.glom.Species.ra), alpha.div)
+#sample_data(ps1.cst.glom.Species.ra) <- sample_data(ps1.cst.glom.Species.ra)[order(sample_data(ps1.cst.glom.Species.ra)$CSTs, #sample_data(ps1.cst.glom.Species.ra)$ShannonLgT), ]
+
+
+
+#####
+
+
+##Kmeans clustering, 
+
+#First we evaluate the number of significant clusters in our dataset
+plot_scree(ord.pcoa.bray) + xlim(as.character(seq(1,12))) + ggtitle("MDS-bray ordination eigenv
+                                                                    alues")
+
+library(factoextra)
+library(NbClust)
+
+# Elbow method
+fviz_nbclust(as.matrix(BrayDistMat), kmeans, method = "wss") +
+  geom_vline(xintercept = 4, linetype = 2)+
+  labs(subtitle = "Elbow method")
+
+# Silhouette method
+fviz_nbclust(as.matrix(BrayDistMat), kmeans, method = "silhouette")+
+  labs(subtitle = "Silhouette method")
+
+
+
+BcOrdEidgenVals <- ord.pcoa.bray$value$Eigenvalues
+BcOrdEidgenVals[1:20]
+tail(BcOrdEidgenVals)
+
+
+## Denoise the distance matrix
+hist_sub5 = hist(BcOrdEidgenVals[6:length(BcOrdEidgenVals)], 100, main = "Histogram of top 6 Eignen Values", xlab = "Cell Mid Points", col="darkmagenta")
+
+# View the number of significant components
+#plot(hist_sub5$mids, hist_sub5$count, log="y", type='h', lwd=10, lend=2, main = "Histogram of top 6 Eignen Values",  ylab = "Frequency", xlab = "Eigen Values")
+
+NDIM <- 7
+x <- ord.pcoa.bray$vectors[,1:NDIM]  # rows=sample, cols=MDS axes, entries = value
+pamPCoA = function(x, k) {
+  list(cluster = pam(x[,1:2], k, cluster.only = TRUE))
+}
+gs = clusGap(x, FUN = pamPCoA, K.max = 12, B = 50)
+plot_clusgap(gs) + scale_x_continuous(breaks=c(seq(0, 12, 2)))
+
+N = 4 #Our desired number of clusters based on the above assessment.
+#modelK1 <- kmeans(x = otu_table(ps1.cst.glom.Species), centers = N)
+#hdis <- dist.binary(otu_table(ps1.cst.glom.Species), method = 1 )
+#modelK2 <- kmeans(x = hdis, centers = N)
+modelK2 <- kmeans(x = scale(BrayDistMat), centers = N)
+
+sample_data(ps1.cst.glom.Species)$classif2 <- factor(modelK2$cluster, levels = unique(sort(modelK2$cluster)), labels = paste0("CST", seq(length(unique(sort(modelK2$cluster))))))
+
+
+##Transform to relative abundances
+#ps1.cst.glom.Species.ra <- transform_sample_counts(ps1.cst.glom.Species, function(x) round(100 * x/sum(x)))
+
+
+###
+
+
+Perform prevalence filtering in final dataset
+
+```{r eval=FALSE, include=FALSE}
+
+
+PlotPrevalence(ps2.v1v2v3.f, 0.05)
+
+PhylumToDrop <- c("Planctomycetes", "Chloroflexi", "SRI", "Verrucomicrobia", "Lentisphaerae")
+#SpeciesToDrop <- c("Peptoniphilus harei")
+#ps2.v1v2v3.f <- subset_taxa(ps2.v1v2v3.f, !(Phylum %in% PhylumToDrop | Species %in% SpeciesToDrop))
+ps2.v1v2v3.f <- subset_taxa(ps2.v1v2v3.f, !Phylum %in% PhylumToDrop)
+#get_taxa_unique(ps2.v1v2v3.f, "Species")
+
+ps2.v1v2v3.f <- FilterByPrevalence(ps2.v1v2v3.f, prevalence = 0.05)
+
+PlotPrevalence(ps2.v1v2v3.f, 0.05)
+
+```
+
+
+#rownames(res.dds.ps2.v1v2) <- paste0("ASV", seq(1:nrow(res.dds.ps2.v1v2)))
+
+#df.v1v2.res.wr <- rownames_to_column(df.v1v2.res, var = "ASV")
+#tax.table.v1v2v3 <- as.tibble(as.data.frame(tax_table(ps2.v1v2v3)[, c(1:7)])) #Drop strain column with only NAs.
+
+#tax.table.v1v2v3 <- rownames_to_column(tax.table.v1v2, var = "ASV")
+#tax.table.v1v2v3$ASV <- rownames(tax.table.v1v2)
+#tax.table.v1v2 <- tax.table.v1v2v3[which(rownames(tax.table.v1v2v3) %in% rownames(res.dds.ps2.v1v2)),]
+
+##Metadata for sinaye:
+m4s <- data.frame(sample_data(ps2.v1v2v3.cst.glom.species.ra))
+m4s <- m4s[c(1:82,100)]
+writexl::write_xlsx(m4s, "m4s.xlsx")
+
+
+## https://chartio.com/resources/tutorials/how-to-sort-a-data-frame-by-multiple-columns-in-r/
+## order by rownames of v2c
+visit1cyto <- visit1cyto[with(visit2cyto, order(rownames(visit1cyto))), ]
+
+
+plyr::ddply(prevelancedf, "Phylum", function(df1){
+  data.frame(mean_prevalence=mean(df1$Prevalence),total_abundance=sum(df1$TotalAbundance,na.rm = T),stringsAsFactors = F)
+})
+
+ps2.v1.alluv <- subset_samples(ps2.v1v2v3.glom.species.ra, VisitCode == 1000)  
+sample_data(ps2.v1.alluv) <- sample_data(ps2.v1.alluv)[order(sample_data(ps2.v1.alluv)$SampleID, sample_data(ps2.v1.alluv)$VisitCode),]
+
+ps2.v2.alluv <- subset_samples(ps2.v1v2v3.glom.species.ra, VisitCode == 1020)
+sample_data(ps2.v2.alluv) <- sample_data(ps2.v2.alluv)[order(sample_data(ps2.v2.alluv)$SampleID, sample_data(ps2.v2.alluv)$VisitCode),]
+
+ps2.v3.alluv <- subset_samples(ps2.v1v2v3.glom.species.ra, VisitCode == 1030)
+sample_data(ps2.v3.alluv) <- sample_data(ps2.v3.alluv)[order(sample_data(ps2.v3.alluv)$SampleID, sample_data(ps2.v3.alluv)$VisitCode),]
+
+
+alluvialData1 <- data.frame(Visit1 = sample_data(ps2.v1.alluv)$sim_CST, 
+                            Visit2  = sample_data(ps2.v2.alluv)$sim_CST, 
+                            Visit3  = sample_data(ps2.v3.alluv)$sim_CST)
+
+#alluvialData1$Visit1 <- factor(alluvialData1$Visit1, levels = c(1,2,3,4,5,6,7), labels = c("I", "II", "III", "IV-A", "IV-B", "IV-C","V"))
+#alluvialData1$Visit2 <- factor(alluvialData1$Visit2, levels = c(1,2,3,4,5,6,7), labels = c("I", "II", "III", "IV-A", "IV-B", "IV-C","V"))
+#alluvialData1$Visit3 <- factor(alluvialData1$Visit3, levels = c(1,2,3,4,5,6,7), labels = c("I", "II", "III", "IV-A", "IV-B", "IV-C","V"))
+
+
+
+col = ifelse( alluvialDataT2$Visit1 == "I-B", CSTsPallete[1], 
+              ifelse( alluvialDataT2$Visit1 == "III-A", CSTsPallete[2], 
+                      ifelse( alluvialDataT2$Visit1 == "III-B", CSTsPallete[3], 
+                              ifelse( alluvialDataT2$Visit1 == "IV-A", CSTsPallete[4],  
+                                      ifelse( alluvialDataT2$Visit1 == "IV-B", CSTsPallete[5], 
+                                              ifelse( alluvialDataT2$Visit1 == "IV-C0", CSTsPallete[6], "")))))),
+
+
+ord_cols <- c("#7CAE00", "#00BFC4", "#C77CFF",  "#F8766D", "#6699CC", "pink", "blue")
+names(ord_cols) <- c("I", "II", "III",  "IV-A", "IV-B", "IV-C", "V")
+p.pcoa.ps2.v3.bray + scale_color_manual( values = ord_cols)

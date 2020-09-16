@@ -1,0 +1,6 @@
+"0","# PCoA plots -color: visitcode"
+"0","sample_data(ps2.v1v2v3.f)$RowNo <- paste(seq_along(1 : nrow(sample_data(ps2.v1v2v3.f))))"
+"0","p.ord.ps2.v1v2v3.bray.vc <- plot_ordination(ps2.v1v2v3.f, ord.ps2.v1v2v3.pcoa.bray, color = ""bvscat"", shape = ""STI"", type = ""samples"", title = ""Bray Curtis Accross Visits"") +"
+"0","  #geom_text_repel(aes(label = RowNo), direction = ""x"") +"
+"0","  theme_light() "
+"0","p.ord.ps2.v1v2v3.bray.vc + geom_point(size=1)"

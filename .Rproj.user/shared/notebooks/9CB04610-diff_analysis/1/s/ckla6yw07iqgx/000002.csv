@@ -1,0 +1,6 @@
+"0","tab_v1_sim_CST <- table(ps2.v1.alluv_sd$sim_CST)"
+"0","tab_v2_sim_CST <- table(ps2.v2.alluv_sd$sim_CST)"
+"0","tab_v3_sim_CST <- table(ps2.v3.alluv_sd$sim_CST)"
+"0","distn_df <-  data.frame(I=c(1,2,3), III=c(15,22,26), 'IV-A'=c(17,11,7), 'IV-B'=c(23,20,20), 'IV-C'=c(0,1,0))"
+"0","rownames(distn_df) <- c(""Visit1"", ""Visit2"", ""Visit3"")"
+"0","distn_df"

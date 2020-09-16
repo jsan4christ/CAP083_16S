@@ -1,0 +1,76 @@
+"0","### Load visit 1 analysis specific packages"
+"0","# Set up required packages"
+"0",".cran_packages <- c(""ggpubr"", ""mclust"", ""dunn.test"", ""cluster"")"
+"0",".bioc_packages <- c()"
+"0",".inst <- .cran_packages %in% installed.packages()"
+"0","if(any(!.inst)) {"
+"0","  install.packages(.cran_packages[!.inst])"
+"0","}"
+"0",".inst <- .bioc_packages %in% installed.packages()"
+"0","if(any(!.inst)) {"
+"0","  source(""http://bioconductor.org/biocLite.R"")"
+"0","  biocLite(.bioc_packages[!.inst], ask = F)"
+"0","}"
+"0","# Load packages into session, and print package version"
+"0","sapply(c(.cran_packages, .bioc_packages), require, character.only = TRUE)"
+"2","Loading required package: ggpubr
+"
+"2","Loading required package: magrittr
+"
+"2","
+Attaching package: ‘magrittr’
+
+"
+"2","The following object is masked from ‘package:purrr’:
+
+    set_names
+
+"
+"2","The following object is masked from ‘package:tidyr’:
+
+    extract
+
+"
+"2","
+Attaching package: ‘ggpubr’
+
+"
+"2","The following object is masked from ‘package:expss’:
+
+    compare_means
+
+"
+"2","Loading required package: mclust
+"
+"2","    __  ___________    __  _____________
+   /  |/  / ____/ /   / / / / ___/_  __/
+  / /|_/ / /   / /   / / / /\__ \ / /   
+ / /  / / /___/ /___/ /_/ /___/ // /    
+/_/  /_/\____/_____/\____//____//_/    version 5.4.3
+Type 'citation(""mclust"")' for citing this R package in publications.
+"
+"2","
+Attaching package: ‘mclust’
+
+"
+"2","The following object is masked from ‘package:purrr’:
+
+    map
+
+"
+"2","Loading required package: dunn.test
+"
+"2","Loading required package: cluster
+"
+"1","   ggpubr "
+"1","   mclust "
+"1","dunn.test "
+"1","  cluster "
+"1","
+"
+"1","     TRUE "
+"1","     TRUE "
+"1","     TRUE "
+"1","     TRUE "
+"1","
+"

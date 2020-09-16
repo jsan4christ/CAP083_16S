@@ -1,0 +1,1458 @@
+```{r diff-ana-v1-vs-v2, echo=FALSE}
+library(ggrepel)
+library(ggpubr)
+require(plotly)
+require(RColorBrewer)
+require(gridExtra )
+require(FactoMineR )
+library("factoextra")
+library(ggsn)
+#Custom color pallete for the bar plots
+customPalette <- c("Atopobium vaginae"="#3366cc", 
+                   "g_Aerococcus"="#666699", 
+                   "g_Anaerococcus"="cadetblue1", 
+                   "Gardnerella vaginalis"="#E41A1C", 
+                   "Lactobacillus crispatus"="#33cc66",
+                   "Lactobacillus iners"="#ffcc66", 
+                   "Lactobacillus jensenii 1"="#009966",
+                   "Other"="#996699", 
+                   "g_Gemella"="#ff6699", 
+                   "g_Lactobacillus"="#996633", 
+                   "g_Parvimonas"="#3F78B0", 
+                   "g_Fastidiosipila"="#3B889F", 
+                   "g_Peptostreptococcus"="#ff6600", 
+                   "f_Bifidobacteriaceae"="#cc99cc", 
+                   "g_Dialister"="#cc6666", 
+                   "Sneathia sanguinegens"="#993366", 
+                   "Prevotella bivia"="#ffff33", 
+                   "g_Sneathia"="#ccffff",
+                   "Sneathia amnii"="#66cccc",
+                   "Peptostreptococcus anaerobius"="#cccccc",
+                   "g_Streptococcus"="black",
+                   "g_DNF00809"="#006633",
+                   "Megasphaera massiliensis"="#ff9933",
+                   "BVAB1"="#ff00ff",
+                   "Lactobacillus gasseri"="#663366",
+                   "g_Peptoniphilus"="#999900",
+                   "Gemella bergeri"="#99ffff",
+                   "Mycoplasma hominis"="#9933cc",
+                   "Prevotella amnii"="#336699",
+                   "g_Mobiluncus"="#336699",
+                   "Lactobacillus kitasatonis"="#99ff00",
+                   "Lactobacillus jensenii 3"="#ff6600",
+                   "g_Bradyrhizobium"="#006666",
+                   "g_Escherichia/Shigella" ="#999966",
+                   "g_Megasphaera"="#ffcc99",
+                   "g_Prevotella"="#99ccff")
+
+keyTaxa <- c("Atopobium vaginae", "Gardnerella vaginalis", "Lactobacillus crispatus", "Lactobacillus iners", "Prevotella bivia", "Prevotella amnii", "BVAB1", "Sneathia sanguinegens", "Lactobacillus gasseri")
+keyCytokines <- c("G.CSF", "IL.1a", "IL.1b", "M.CSF")
+trendingCytokines <- c("G.CSF", "IL.1a", "IL.1b", "M.CSF", "VEGF", "GM.CSF", "HGF", "IL.2Ra", "IL.4", "LIF", "MIG", "TNF.a", "TNF.b", "IL.16", "IL.15", "IL.6", "IL.7", "IL.8", "IFN.g", "IL.12p70", "IP.10", "MIP.1a", "SCF")
+```
+
+Ordinations
+
+## Individual Visits Ordinations
+
+Visit 1 samples without BV or STIs
+
+```{r ind_visit_analyses-visit1-old, echo=FALSE}
+set.seed(1982)
+
+ps1.v1 <- subset_samples(ps1, VisitCode == 1000)
+#Remove taxa not associated with any samples anymore
+ps1.v1 <- prune_taxa(taxa_sums(ps1.v1) > 0, ps1.v1)
+
+## Estimate richness
+ps1.v1 <- cestimate_richness(ps1.v1)
+
+#Agglomerate at species level
+ps1.v1.cst.glom.Species <- tax_glom(ps1.v1, taxrank = "Species")
+
+## Transform to relative abundance
+ps1.v1.cst.glom.Species.ra <- transform_sample_counts(ps1.v1.cst.glom.Species, function(OTU) OTU/sum(OTU))
+
+dt.ps1.v1.sample_data <-  data.frame(sample_data(ps1.v1.cst.glom.Species.ra))
+  
+NoBVNoSTI <- subset(dt.ps1.v1.sample_data, (dt.ps1.v1.sample_data$bvscat == "Negative" & dt.ps1.v1.sample_data$STI == 0))
+
+sampleIdsNoBvStis <- NoBVNoSTI$SampleID
+
+ps1.v1.cst.glom.Species.raNoBS <- prune_samples(get_variable(ps1.v1.cst.glom.Species.ra, "SampleID") %in% sampleIdsNoBvStis, ps1.v1.cst.glom.Species.ra)
+ps1.v1.cst.glom.Species.raNoBS
+ps1.v1.cst.glom.Species.raNoBS <- prune_samples(sample_sums(ps1.v1.cst.glom.Species.raNoBS) > 0 , ps1.v1.cst.glom.Species.raNoBS)
+ps1.v1.cst.glom.Species.raNoBS <- prune_taxa(taxa_sums(ps1.v1.cst.glom.Species.raNoBS) > 0 , ps1.v1.cst.glom.Species.raNoBS)
+ps2.x.merged <- merge_less_than_top(ps1.v1.cst.glom.Species.raNoBS)
+
+# create dataframe from phyloseq object
+dat <- data.table(psmelt(ps2.x.merged))
+
+#sort samples by CSTs and Abundance
+dat <- dat[order(sim_CST, Abundance), ]
+dat$ParticipantID <- as.character(dat$ParticipantID)
+#Bar plot
+colourCount = length(unique(dat$Sample))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+
+p <- ggplot(dat, aes(x=ParticipantID, y=Abundance, fill=Species)) + 
+  geom_bar(aes(), stat="identity", position="stack") + 
+  #scale_fill_manual(values=getPalette(colourCount)) + 
+  scale_fill_manual(values=customPalette) + 
+  #scale_fill_viridis_d() +
+  theme(legend.position="bottom",
+        #axis.text.x = element_blank(),
+        axis.text.x = element_text(size = 6, angle = 90),
+        legend.text = element_text(size = 8)) + 
+  facet_grid(. ~ sim_CST, drop=TRUE,scale="free",space="free_x") + 
+  guides(fill=guide_legend(nrow=7)) 
+
+p <- p+ theme(strip.background = element_rect(fill="white", colour = "white", size = 4),
+              strip.text = element_text(face="bold", size=7),
+              panel.spacing = unit(0, "lines") #get rid of facet margins
+)
+g <- ggplot_gtable(ggplot_build(p))
+stripr <- which(grepl('strip-t', g$layout$name))
+fills <- CSTsPalleteNamed[levels(dat$sim_CST)] 
+k <- 1
+for (i in stripr) {
+  j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
+  g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
+  k <- k+1
+}
+
+grid.newpage()
+grid.draw(g)
+
+```
+
+### Visit 1 only
+```{r ind_visit_analyses-visit1-new, echo=FALSE}
+set.seed(1982)
+source(paste0("scripts/", "heatmap_function.R"))
+
+## Visit1 only:
+ps2.v1 <- prune_samples(sample_data(ps2.v1v2v3)$VisitCode == 1000, ps2.v1v2v3)
+ps2.v1 <- prune_taxa(taxa_sums(ps2.v1) >  0, ps2.v1)
+
+## Estimate richness
+ps2.v1 <- cestimate_richness(ps2.v1)
+
+## Aglomerate to species
+ps2.v1.glom.species <- tax_glom(ps2.v1, "Species")
+
+## Transform to relative abundance
+ps2.v1.cst.glom.species.ra <- transform_sample_counts(ps2.v1.glom.species, function(x) {
+  x/sum(x)
+})
+
+## Cluster into CSTs
+levels(sample_data(ps2.v1.cst.glom.species.ra)$sim_CST)
+CSTs <- as.character(unique(sample_data(ps1.v1.cst.glom.Species.ra)$sim_CST))
+
+#Sort by CTS snd Shannon indexes before proceeding
+sample_data(ps2.v1.cst.glom.species.ra) <- sample_data(ps2.v1.cst.glom.species.ra)[order(sample_data(ps2.v1.cst.glom.species.ra)$sim_CST, sample_data(ps2.v1.cst.glom.species.ra)$ShannonLgT), ]
+ps2.v1.cst.glom.species.ra <- prune_samples(sample_sums(ps2.v1.cst.glom.species.ra) > 0, ps2.v1.cst.glom.species.ra)
+ps2.v1.cst.glom.species.ra <- prune_taxa(taxa_sums(ps2.v1.cst.glom.species.ra) >0, ps2.v1.cst.glom.species.ra)
+
+ord.pcoa.bray.v2 <- ordinate(ps2.v1.cst.glom.species.ra, method = "PCoA", distance = "bray")
+p.pcoa.ps2.v1.bray <- plot_ordination(ps2.v1.cst.glom.species.ra, ord.pcoa.bray.v1, color = "sim_CST") +
+    geom_point(aes(size = 0.6)) +
+    coord_fixed(0.27) +
+    theme_light() +
+    stat_ellipse() +
+  scale_colour_manual(values = CSTsPalleteNamed)
+p.pcoa.ps2.v1.bray
+
+  physeq <- ps2.v1.cst.glom.species.ra
+
+  top25 <- names(sort(taxa_sums(physeq), decreasing=T))[1:20]
+  physeq.top25 <- prune_taxa(top25, physeq)
+  
+  # Sorting vars
+  taxa.order <- names(sort(taxa_sums(physeq.top25)))
+  sample.order <- rownames(sample_data(physeq.top25)[order(get_variable(physeq.top25, "sim_CST"), get_variable(physeq.top25, "ShannonLgT"))])
+  
+  hm <- plot_heatmap.2(physeq.top25, taxa.label="Species", sample.order=sample.order, taxa.order=taxa.order)
+  hm <- hm + theme(axis.title.x = element_text(size=10),
+                   axis.title.y = element_text(size=10),
+                   axis.text.x = element_blank(),
+                   axis.text.y = element_text(size=7),
+                   plot.title = element_text(size=8),
+                   legend.text = element_text(size=7),
+                   legend.title = element_text(size=8),
+                   # legend.margin = unit(c(0.1,0.1,0.1,0.1),"mm"),
+                   # legend.key.height = unit(1, "in"),
+                   legend.key.width = unit(0.15, "in")#,
+                   #plot.margin=unit(c(0,0,0,0),"mm")
+                   )
+  
+  CSTColors <- brewer.pal(11,"Paired")[c(1,2,3,4,5,6,7,8,9,10,11)] # Length 5 for consistency with pre-revision CT+      coloration
+  names(CSTColors) <- CSTs
+  CSTColorScale <- scale_colour_manual(name = "CST", values = CSTColors[1:11])
+  CSTFillScale <- scale_fill_manual(name = "CST", breaks =  CSTs_all, values = CSTsPalleteNamed)
+
+  
+  ### CHANGING SPECIES TO TAXA ON YLABEL - important to ensure proper ordering of y-axis labels
+  labvec <- as(tax_table(physeq.top25)[, "Species"], "character")
+  names(labvec) <- taxa_names(physeq.top25)
+  labvec <- labvec[taxa.order]
+  df.physeq <- data.frame(sample_data(physeq.top25))
+  df.physeq <- df.physeq[sample.order,] #resolve
+  df.physeq$index <- seq(1, nsamples(physeq.top25))
+  
+  hcb <- make_hcb(df.physeq, "sim_CST", name = "CSTs", fillScale = CSTFillScale)
+  hcb <- hcb + annotate("text", x=tapply(df.physeq$index, df.physeq[, "sim_CST", drop=T], mean), y=1,
+                        label=levels(df.physeq[, "sim_CST", drop=T]), size=2)
+  
+  Chl <- make_hcb(df.physeq, "Chlamydia", name="Chlamydia", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+  Gon <- make_hcb(df.physeq, "Gonorrhoea", name="Gonorrhoea", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="green4")))
+  Tri <- make_hcb(df.physeq, "Trichomoniasis", name="Trichomoniasis", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="yellow4")))
+  Cand <- make_hcb(df.physeq, "Candidiasis", name="Candidiasis", 
+                   fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tomato4")))
+  inf <- make_hcb(df.physeq, "Inflammation", name="Inflammation", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="darkred")))
+  bvscores <- make_hcb(df.physeq, "bvscat", name="Nuggent Score", 
+                       fillScale = scale_fill_manual(values=c("Negative"="white", "Intermediate"="grey60", "BV"="maroon")))
+  
+  inf <- inf + theme(axis.text.y = element_text(size=8, face="bold", color="grey60"))
+  Chl <- Chl + theme(axis.text.y = element_text(size=8, face="bold", color="tan4"))    
+  Gon <- Gon + theme(axis.text.y = element_text(size=8, face="bold", color="green4"))
+  Tri  <- Tri + theme(axis.text.y = element_text(size=8, face="bold", color="yellow4")) 
+  Cand <- Cand + theme(axis.text.y = element_text(size=8, face="bold", color="tomato4"))
+  
+  bvscores <- bvscores +
+                theme(axis.text.y = element_text(size=8))
+  
+  Fig <- mush(hm, list(Chl, Gon, Tri, Cand, inf, bvscores, hcb))
+  grid.newpage()
+  grid.draw(Fig)
+```
+
+```{r visit-1-stacked-barplot, echo=FALSE}
+source(paste0("scripts/", "custom_microbiome_functions.R"))
+ps2.v1.cst.merged <-merge_less_than_top(ps2.v1.cst.glom.species.ra, 14)
+
+# create dataframe from phyloseq object
+dat <- data.table(psmelt(ps2.v1.cst.merged))
+# convert Phylum to a character vector from a factor because R
+dat$Species <- as.character(dat$Species)
+
+#sort samples by CSTs and Abundance
+dat <- dat[order(sim_CST, Abundance), ]
+dat$ParticipantID <- as.character(dat$ParticipantID)
+
+#Bar plot
+colourCount = length(unique(dat$Sample))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+
+p <- ggplot(dat, aes(x=ParticipantID, y=Abundance, fill=Species)) + 
+        geom_bar(aes(), stat="identity", position="stack") + 
+        #scale_fill_manual(values=getPalette(colourCount)) + 
+        scale_fill_manual(values=customPalette) + 
+        #scale_fill_viridis_d() +
+        theme(legend.position="bottom",
+        #axis.text.x = element_blank(),
+        axis.text.x = element_text(size = 6, angle = 90),
+        legend.text = element_text(size = 8)) + 
+        facet_grid(. ~ sim_CST, drop=TRUE,scale="free",space="free_x") + 
+        guides(fill=guide_legend(nrow=5)) 
+
+p <- p+ theme(strip.background = element_rect(fill="white", colour = "white", size = 4),
+                    strip.text = element_text(face="bold", size=7),
+                    panel.spacing = unit(0, "lines") #get rid of facet margins
+              )
+g <- ggplot_gtable(ggplot_build(p))
+stripr <- which(grepl('strip-t', g$layout$name))
+fills <- CSTsPalleteNamed[levels(dat$sim_CST)]
+k <- 1
+for (i in stripr) {
+j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
+g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
+k <- k+1
+}
+
+
+grid.newpage()
+grid.draw(g)
+
+q <- ggplot(dat, aes(x=ParticipantID, y=Abundance, fill=Species)) + 
+        geom_bar(stat="identity", position="stack") + 
+        scale_fill_manual(values=customPalette) + 
+        #scale_fill_viridis_d() +
+        theme(legend.position="bottom",
+        axis.text.x = element_text(size = 6, angle = 90),
+        legend.text = element_text(size = 8)) + 
+        guides(fill=guide_legend(nrow=5)) 
+
+q <- q + theme(plot.margin = margin(0,0,0,0))
+Figq <- mush(q, list( bvscores))
+  grid.newpage()
+  grid.draw(Figq)
+```
+
+Visit 1 biplots
+```{r visit1-cytokine-taxa-biplots}
+## Visit 1 (baseline)
+## factorMineR factoextra
+
+## keyTaxa and keyCytokines defined at the top:
+ps2.v1.cyto <- subset_taxa(ps2.v1.cst.glom.species.ra, Species %in% keyTaxa)
+ps2.v1.cyto <-  prune_samples(sample_sums(ps2.v1.cyto) > 0, ps2.v1.cyto)
+ps2.v1.cyto <- prune_taxa(taxa_sums(ps2.v1.cyto) >0, ps2.v1.cyto)
+
+taxa_names(ps2.v1.cyto) <- tax_table(ps2.v1.cyto)[, "Species"]
+otu.ps2.v1.cyto <- data.frame(otu_table(ps2.v1.cyto))
+
+df.ps2.v1.cyto <- data.frame(sample_data(ps2.v1.cyto)[, c(keyCytokines)])
+dt.ps2.v1.cyto.otu <- cbind(otu.ps2.v1.cyto, df.ps2.v1.cyto)
+
+dt.ps2.v1.pca <- PCA(scale(as.matrix(dt.ps2.v1.cyto.otu), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+fviz_pca_biplot(dt.ps2.v1.pca,
+             #individuals 
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.v1.cyto)))$sim_CST,
+             col.var = "black", 
+             
+             #variables
+             alpha.var =  "cos2", 
+             #addEllipses = TRUE, # Concentration ellipses
+             #ellipse.level=0.95,
+             #palette = CSTsPallete,
+             legend.title = "CSTs",
+             title = "PCA plot Showing the Relationship Between Bacteria and Super Cytokines",
+             repel = TRUE)+
+  scale_color_manual("CSTs", breaks = c("I", "II", "III",  "IV-A", "IV-B", "IV-C", "V"),
+                      values = CSTsPalleteNamed)
+
+## Taxa and trending cytokines
+df.ps2.v1.cyto.tren <- data.frame(sample_data(ps2.v1.cyto)[, c(trendingCytokines)])
+dt.ps2.v1.cyto.otu.tren <- cbind(otu.ps2.v1.cyto, df.ps2.v1.cyto.tren)
+
+dt.ps2.v1.pca.tren <- PCA(scale(as.matrix(dt.ps2.v1.cyto.otu.tren), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+fviz_pca_biplot(dt.ps2.v1.pca.tren,
+             #individuals 
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.v1.cyto)))$sim_CST,
+             col.var = "black", 
+             #variables
+             alpha.var =  "cos2", 
+             legend.title = "CSTs",
+             title = "PCA plot Showing the Relationship Between Bacteria and Trending Cytokines",
+             repel = TRUE)+
+  scale_color_manual(breaks = c("I", "II", "III",  "IV-A", "IV-B", "IV-C", "V"),
+                      values = c("I"="#7CAE00", "II"="#00BFC4", "III"="#C77CFF",  "IV-A"="#F8766D", "IV-B"="#6699CC", "IV-C"="pink", "V"="blue"))+ 
+  theme_minimal(base_size = 14) +
+  theme(text = element_text(face = "bold"))
+
+```
+
+### Visit 2 only
+
+```{r visit2-analysis, echo=FALSE}
+## Visit2 only:
+ps2.v2 <- prune_samples(sample_data(ps2.v1v2v3)$VisitCode == 1020, ps2.v1v2v3)
+ps2.v2 <- prune_taxa(taxa_sums(ps2.v2) > 0, ps2.v2)
+
+## Estimate richness
+ps2.v2 <- cestimate_richness(ps2.v2)
+
+## Aglomerate to species
+ps2.v2.glom.species <- tax_glom(ps2.v2, "Species")
+
+## Transform to relative abundance
+ps2.v2.cst.glom.species.ra <- transform_sample_counts(ps2.v2.glom.species, function(x) {
+  x/sum(x)
+})
+
+#Sort by CTS snd Shannon indexes before proceeding
+sample_data(ps2.v2.cst.glom.species.ra) <- sample_data(ps2.v2.cst.glom.species.ra)[order(sample_data(ps2.v2.cst.glom.species.ra)$sim_CST, sample_data(ps2.v2.cst.glom.species.ra)$ShannonLgT), ]
+ps2.v2.cst.glom.species.ra <- prune_samples(sample_sums(ps2.v2.cst.glom.species.ra) > 0, ps2.v2.cst.glom.species.ra)
+ps2.v2.cst.glom.species.ra <- prune_taxa(taxa_sums(ps2.v2.cst.glom.species.ra) > 0, ps2.v2.cst.glom.species.ra)
+  
+ord.pcoa.bray.v2 <- ordinate(ps2.v2.cst.glom.species.ra, method = "PCoA", distance = "bray")
+p.pcoa.ps2.v2.bray <- plot_ordination(ps2.v2.cst.glom.species.ra, ord.pcoa.bray.v2, color = "sim_CST") +
+    geom_point(aes(size = 0.6)) +
+    coord_fixed(0.27) +
+    theme_light() +
+    stat_ellipse() +
+  scale_colour_manual(name = "CSTs", breaks = CSTs_all, values = CSTsPalleteNamed)
+p.pcoa.ps2.v2.bray
+
+  physeq <- ps2.v2.cst.glom.species.ra
+
+  top25 <- names(sort(taxa_sums(physeq), decreasing=T))[1:20]
+  physeq.top25 <- prune_taxa(top25, physeq)
+  
+  # Sorting vars
+  taxa.order <- names(sort(taxa_sums(physeq.top25)))
+  sample.order <- rownames(sample_data(physeq.top25)[order(get_variable(physeq.top25, "sim_CST"), get_variable(physeq.top25, "ShannonLgT"))])
+  
+  hm <- plot_heatmap.2(physeq.top25, taxa.label="Species", sample.order=sample.order, taxa.order=taxa.order)
+  hm <- hm + theme(axis.title.x = element_text(size=10),
+                   axis.title.y = element_text(size=10),
+                   axis.text.x = element_blank(),
+                   axis.text.y = element_text(size=7),
+                   plot.title = element_text(size=8),
+                   legend.text = element_text(size=7),
+                   legend.title = element_text(size=8),
+                   legend.key.width = unit(0.15, "in")
+                   )
+  
+  CSTColors <- brewer.pal(11,"Paired")[c(1,2,3,4,5,6,7,8,9,10,11)] # Length 5 for consistency with pre-revision CT coloration
+  names(CSTColors) <- CSTs
+  CSTColorScale <- scale_colour_manual(name = "CST", values = CSTColors[1:11])
+  CSTFillScale <- scale_fill_manual(name = "CSTs", breaks = CSTs_all, values = CSTsPalleteNamed)
+  
+  ### CHANGING SPECIES TO TAXA ON YLABEL
+  labvec <- as(tax_table(physeq.top25)[, "Species"], "character")
+  names(labvec) <- taxa_names(physeq.top25)
+  labvec <- labvec[taxa.order]
+  
+  df.physeq <- data.frame(sample_data(physeq.top25))
+  df.physeq <- df.physeq[sample.order,] #resolve
+  df.physeq$index <- seq(1, nsamples(physeq.top25))
+  
+  hcb <- make_hcb(df.physeq, "sim_CST", name = "CSTs", fillScale = CSTFillScale)
+  hcb <- hcb + annotate("text", x=tapply(df.physeq$index, df.physeq[, "sim_CST", drop=T], mean), y=1,
+                        label=levels(df.physeq[, "sim_CST", drop=T]), size=2)
+  
+  Chl <- make_hcb(df.physeq, "Chlamydia", name="Chlamydia", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+  Gon <- make_hcb(df.physeq, "Gonorrhoea", name="Gonorrhoea", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="green4")))
+  Tri <- make_hcb(df.physeq, "Trichomoniasis", name="Trichomoniasis", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="yellow4")))
+  Cand <- make_hcb(df.physeq, "Candidiasis", name="Candidiasis", 
+                   fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tomato4")))
+  inf <- make_hcb(df.physeq, "Inflammation", name="Inflammation", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="darkred")))
+  bvscores <- make_hcb(df.physeq, "bvscat", name="Nuggent Score", 
+                       fillScale = scale_fill_manual(values=c("Negative"="white", "Intermediate"="grey60", "BV"="maroon")))
+  
+  inf <- inf + theme(axis.text.y = element_text(size=8, face="bold", color="grey60"))
+  Chl <- Chl + theme(axis.text.y = element_text(size=8, face="bold", color="tan4"))    
+  Gon <- Gon + theme(axis.text.y = element_text(size=8, face="bold", color="green4"))
+  Tri  <- Tri + theme(axis.text.y = element_text(size=8, face="bold", color="yellow4")) 
+  Cand <- Cand + theme(axis.text.y = element_text(size=8, face="bold", color="tomato4"))
+  
+  Fig <- mush(hm, list(Chl, Gon, Tri, Cand, inf, bvscores, hcb))
+  grid.newpage()
+  grid.draw(Fig)
+```
+
+```{r visit-2-stacked-barplot, echo=FALSE}
+
+ps2.v2.cst.merged <-merge_less_than_top(ps2.v2.cst.glom.species.ra)
+
+dat <- data.table(psmelt(ps2.v2.cst.merged))
+# convert Phylum to a character vector from a factor because R
+dat$Species <- as.character(dat$Species)
+# group dataframe by Phylum, calculate median rel. abundance
+dat <- dat[, median := median(Abundance, na.rm = TRUE), by = "Phylum"]
+
+
+#sort samples by CSTs and Abundance
+dat <- dat[order(sim_CST, Abundance), ]
+dat$ParticipantID <- as.character(dat$ParticipantID)
+
+# boxplot
+ggplot(dat[Abundance > 0],
+       aes(x=Species,
+           y=Abundance)) + 
+  geom_boxplot() + 
+  coord_flip() +
+  scale_y_log10()
+
+#Bar plot
+colourCount = length(unique(dat$Sample))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+
+p <- ggplot(dat, aes(x=ParticipantID, y=Abundance, fill=Species)) + 
+        geom_bar(aes(), stat="identity", position="stack") + 
+        #scale_fill_manual(values=getPalette(colourCount)) + 
+        scale_fill_manual(values=customPalette) + 
+        theme(legend.position="bottom",
+        #axis.text.x = element_blank(),
+        axis.text.x = element_text(size = 6, angle = 90),
+        legend.text = element_text(size = 8)) + 
+        facet_grid(. ~ sim_CST, drop=TRUE,scale="free",space="free_x") + 
+        guides(fill=guide_legend(nrow=7)) 
+p <- p+ theme(strip.background = element_rect(fill="white", colour = "white", size = 4),
+                    strip.text = element_text(face="bold", size=7),
+                    panel.spacing = unit(0, "lines"), #get rid of facet margins
+                    plot.margin=unit(c(0,0.5,0.5,0.5),"lines")
+              )
+g <- ggplot_gtable(ggplot_build(p))
+stripr <- which(grepl('strip-t', g$layout$name))
+fills <- CSTsPalleteNamed[levels(dat$sim_CST)]
+k <- 1
+for (i in stripr) {
+j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
+g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
+k <- k+1
+}
+grid.newpage()
+grid.draw(g)
+
+q <- ggplot(dat, aes(x=ParticipantID, y=Abundance, fill=Species)) + 
+        geom_bar(aes(), stat="identity", position="stack") + 
+        #scale_fill_manual(values=getPalette(colourCount)) + 
+        scale_fill_manual(values=customPalette) + 
+        theme(legend.position="bottom",
+        #axis.text.x = element_blank(),
+        axis.text.x = element_text(size = 6, angle = 90),
+        legend.text = element_text(size = 8)) + 
+        guides(fill=guide_legend(nrow=7)) 
+
+q <- q+ theme(strip.background = element_rect(fill="white", colour = "white", size = 4),
+                    strip.text = element_text(face="bold", size=7),
+                    panel.spacing = unit(0, "lines") #get rid of facet margins
+              )
+Figq <- mush(q, list( bvscores))
+  grid.newpage()
+  grid.draw(Figq)
+```
+
+```{r visit2-cytokine-taxa-biplots}
+## Visit 1 (baseline)
+
+
+## keyTaxa and keyCytokines defined at the top:
+ps2.v2.cyto <- subset_taxa(ps2.v2.cst.glom.species.ra, Species %in% keyTaxa)
+ps2.v2.cyto <- prune_taxa(taxa_sums(ps2.v2.cyto) >0, ps2.v2.cyto)
+
+taxa_names(ps2.v2.cyto) <- tax_table(ps2.v2.cyto)[, "Species"]
+otu.ps2.v2.cyto <- data.frame(otu_table(ps2.v2.cyto))
+
+df.ps2.v2.cyto <- data.frame(sample_data(ps2.v2.cyto)[, c(keyCytokines)])
+dt.ps2.v2.cyto.otu <- cbind(otu.ps2.v2.cyto, df.ps2.v2.cyto)
+
+dt.ps2.v2.pca <- PCA(scale(as.matrix(dt.ps2.v2.cyto.otu), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+fviz_pca_biplot(dt.ps2.v2.pca,
+             #individuals 
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.v2.cyto)))$sim_CST,
+             col.var = "black", 
+             
+             #variables
+             alpha.var =  "cos2", 
+             #addEllipses = TRUE, # Concentration ellipses
+             #ellipse.level=0.95,
+             #palette = CSTsPallete,
+             legend.title = "CSTs",
+             title = "PCA plot Showing the Relationship Between Bacteria and Super Cytokines",
+             repel = TRUE)+
+  scale_color_manual(name = "CSTs", breaks = CSTs_all, values = CSTsPalleteNamed)
+
+
+
+## Taxa and trending cytokines
+df.ps2.v2.cyto.tren <- data.frame(sample_data(ps2.v2.cyto)[, c(trendingCytokines)])
+dt.ps2.v2.cyto.otu.tren <- cbind(otu.ps2.v2.cyto, df.ps2.v2.cyto.tren)
+
+dt.ps2.v2.pca.tren <- PCA(scale(as.matrix(dt.ps2.v2.cyto.otu.tren), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+fviz_pca_biplot(dt.ps2.v2.pca.tren,
+             #individuals 
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.v2.cyto)))$sim_CST,
+             col.var = "black", 
+             arrowsize=0.8,
+             
+             #variables
+             alpha.var =  "cos2", 
+             legend.title = "CSTs",
+             title = "PCA plot Showing the Relationship Between Bacteria and Trending Cytokines",
+             repel = TRUE) +
+  scale_color_manual(name = "CSTs", breaks = CSTs_all, values = CSTsPalleteNamed)+ 
+  theme_minimal(base_size = 14) +
+  theme(text = element_text(face = "bold"))
+
+```
+
+Visit three heatmaps and bar plots  
+```{r visit3-analyses, echo=FALSE}
+
+## Visit3 only:
+ps2.v3 <- prune_samples(sample_data(ps2.v1v2v3)$VisitCode == 1030, ps2.v1v2v3)
+ps2.v3 <- prune_taxa(taxa_sums(ps2.v3) > 0, ps2.v3)
+
+## Estimate richness
+ps2.v3 <- cestimate_richness(ps2.v3)
+
+## Transform to relative abundance
+ps2.v3.cst.ra <- transform_sample_counts(ps2.v3, function(x) {
+  x/sum(x)
+})
+
+otu_table(ps2.v3.cst.ra)[is.nan(otu_table(ps2.v3.cst.ra))] <- 0
+
+## Aglomerate to species
+ps2.v3.cst.glom.species.ra <- tax_glom(ps2.v3.cst.ra, "Species")
+
+#Sort by CTS snd Shannon indexes before proceeding
+sample_data(ps2.v3.cst.glom.species.ra) <- sample_data(ps2.v3.cst.glom.species.ra)[order(sample_data(ps2.v3.cst.glom.species.ra)$sim_CST, sample_data(ps2.v3.cst.glom.species.ra)$ShannonLgT), ]
+
+dist_obj <- as.matrix(phyloseq::distance(ps2.v3.cst.glom.species.ra, method="bray"))
+dist_obj[is.na(dist_obj)] <- 0
+dist_obj[is.nan(dist_obj)] <- 0 
+# Elbow method
+fviz_nbclust(dist_obj, kmeans, method = "wss") +
+    geom_vline(xintercept = 4, linetype = 2)+
+  labs(subtitle = "Elbow method")
+
+ps2.v3.cst.glom.species.raStep <- ps2.v3.cst.glom.species.ra
+otu_table(ps2.v3.cst.glom.species.raStep) <- otu_table(ps2.v3.cst.glom.species.raStep) + 1
+ord.pcoa.bray.v3 <- ordinate(ps2.v3.cst.glom.species.raStep, method = "PCoA", distance = "bray")
+p.pcoa.ps2.v3.bray <- plot_ordination(ps2.v3.cst.glom.species.raStep, ord.pcoa.bray.v3, color = "sim_CST") +
+    geom_point(aes(size = 0.6)) +
+    coord_fixed(0.28) +
+    theme_light() +
+    stat_ellipse() + 
+  scale_color_manual( values = CSTsPalleteNamed)
+p.pcoa.ps2.v3.bray 
+
+
+physeq <- ps2.v3.cst.glom.species.ra
+
+  top25 <- names(sort(taxa_sums(physeq), decreasing=T))[1:20]
+  physeq.top25 <- prune_taxa(top25, physeq)
+  
+  # Sorting vars
+  taxa.order <- names(sort(taxa_sums(physeq.top25)))
+  sample.order <- rownames(sample_data(physeq.top25)[order(get_variable(physeq.top25, "sim_CST"), get_variable(physeq.top25, "ShannonLgT"))])
+  
+  hm <- plot_heatmap.2(physeq.top25, taxa.label="Species", sample.order=sample.order, taxa.order=taxa.order)
+  hm <- hm + theme(axis.title.x = element_text(size=10),
+                   axis.title.y = element_text(size=10),
+                   axis.text.x = element_blank(),
+                   axis.text.y = element_text(size=7),
+                   plot.title = element_text(size=8),
+                   legend.text = element_text(size=7),
+                   legend.title = element_text(size=8),
+                   legend.key.width = unit(0.15, "in")
+                   )
+  
+  CSTColors <- brewer.pal(11,"Paired")[c(1,2,3,4,5,6,7,8,9,10,11)] # Length 5 for consistency with pre-revision CT coloration
+  names(CSTColors) <- CSTs
+  CSTColorScale <- scale_colour_manual(name = "CST", values = CSTColors[1:11])
+  CSTFillScale <- scale_fill_manual(name = "CSTs", breaks = CSTs_all, values = CSTsPalleteNamed)
+  
+  
+  ### CHANGING SPECIES TO TAXA ON YLABEL
+  labvec <- as(tax_table(physeq.top25)[, "Species"], "character")
+  names(labvec) <- taxa_names(physeq.top25)
+  labvec <- labvec[taxa.order]
+
+  df.physeq <- data.frame(sample_data(physeq.top25))
+  df.physeq <- df.physeq[sample.order,] #resolve
+  df.physeq$index <- seq(1, nsamples(physeq.top25))
+  
+  hcb <- make_hcb(df.physeq, "sim_CST", name = "CSTs", fillScale = CSTFillScale)
+  hcb <- hcb + annotate("text", x=tapply(df.physeq$index, df.physeq[, "sim_CST", drop=T], mean), y=1,
+                        label=levels(df.physeq[, "sim_CST", drop=T]), size=2)
+  
+  Chl <- make_hcb(df.physeq, "Chlamydia", name="Chlamydia", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tan4")))
+  Gon <- make_hcb(df.physeq, "Gonorrhoea", name="Gonorrhoea", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="green4")))
+  Tri <- make_hcb(df.physeq, "Trichomoniasis", name="Trichomoniasis", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="yellow4")))
+  Cand <- make_hcb(df.physeq, "Candidiasis", name="Candidiasis", 
+                   fillScale = scale_fill_manual(values=c("0"="grey90", "1"="tomato4")))
+  inf <- make_hcb(df.physeq, "Inflammation", name="Inflammation", 
+                  fillScale = scale_fill_manual(values=c("0"="grey90", "1"="darkred")))
+  bvscores <- make_hcb(df.physeq, "bvscat", name="Nuggent Score", 
+                       fillScale = scale_fill_manual(values=c("Negative"="white", "Intermediate"="grey60", "BV"="maroon")))
+  
+  inf <- inf + theme(axis.text.y = element_text(size=8, face="bold", color="grey60"))
+  Chl <- Chl + theme(axis.text.y = element_text(size=8, face="bold", color="tan4"))    
+  Gon <- Gon + theme(axis.text.y = element_text(size=8, face="bold", color="green4"))
+  Tri  <- Tri + theme(axis.text.y = element_text(size=8, face="bold", color="yellow4")) 
+  Cand <- Cand + theme(axis.text.y = element_text(size=8, face="bold", color="tomato4"))
+  
+  Fig <- mush(hm, list(Chl, Gon, Tri, Cand, inf, bvscores, hcb))
+  grid.newpage()
+  grid.draw(Fig)
+```
+
+```{r visit-3-stacked-barplot, echo=FALSE}
+## Collapse to most important
+ps2.v3.cst.merged <- merge_less_than_top(ps2.v3.cst.glom.species.ra)
+
+dat <- data.table(psmelt(ps2.v3.cst.merged))
+# convert Phylum to a character vector from a factor because R
+dat$Species <- as.character(dat$Species)
+# group dataframe by Phylum, calculate median rel. abundance
+dat <- dat[, median := median(Abundance, na.rm = TRUE), by = "Phylum"]
+dat[is.nan(dat$Abundance), "Abundance"] <- 0
+
+#sort samples by CSTs and Abundance
+dat <- dat[order(sim_CST, Abundance), ]
+dat$ParticipantID <- as.character(dat$ParticipantID)
+
+##
+#Bar plot
+colourCount = length(unique(dat$Sample))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+
+p <- ggplot(dat, aes(x=ParticipantID, y=Abundance, fill=Species)) + 
+        geom_bar(aes(), stat="identity", position="stack") + 
+        scale_fill_manual(values=customPalette) + 
+        theme(legend.position="bottom",
+        axis.text.x = element_text(size = 6, angle = 90),
+        legend.text = element_text(size = 8)) + 
+        facet_grid(. ~ sim_CST, drop=TRUE,scale="free",space="free_x") + 
+        guides(fill=guide_legend(nrow=7)) 
+
+p <- p+ theme(strip.background = element_rect(fill="white", colour = "white", size = 4),
+                    strip.text = element_text(face="bold", size=7),
+                    panel.spacing = unit(0, "lines") #get rid of facet margins
+              )
+g <- ggplot_gtable(ggplot_build(p))
+stripr <- which(grepl('strip-t', g$layout$name))
+fills <- CSTsPalleteNamed[levels(dat$sim_CST)] 
+k <- 1
+for (i in stripr) {
+j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
+g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
+k <- k+1
+}
+grid.newpage()
+grid.draw(g)
+
+
+q <- ggplot(dat, aes(x=ParticipantID, y=Abundance, fill=Species)) + 
+        geom_bar(aes(), stat="identity", position="stack") + 
+        #scale_fill_manual(values=getPalette(colourCount)) + 
+        scale_fill_manual(values=customPalette) + 
+        theme(legend.position="bottom",
+        #axis.text.x = element_blank(),
+        axis.text.x = element_text(size = 6, angle = 90),
+        legend.text = element_text(size = 8)) + 
+        guides(fill=guide_legend(nrow=7)) 
+
+q <- q+ theme(strip.background = element_rect(fill="white", colour = "white", size = 4),
+                    strip.text = element_text(face="bold", size=7),
+                    panel.spacing = unit(0, "lines") #get rid of facet margins
+              )
+Figq <- mush(q, list( bvscores))
+  grid.newpage()
+  grid.draw(Figq)
+
+```
+
+Visit 3 PCA biplots
+
+```{r visit3-cytokine-taxa-biplots}
+## Visit 3 (baseline)
+
+## keyTaxa and keyCytokines defined at the top:
+ps2.v3.cyto <- subset_taxa(ps2.v3.cst.glom.species.ra, Species %in% keyTaxa)
+ps2.v3.cyto <- prune_taxa(taxa_sums(ps2.v3.cyto) >0,ps2.v3.cyto)
+
+taxa_names(ps2.v3.cyto) <- tax_table(ps2.v3.cyto)[, "Species"]
+otu.ps2.v3.cyto <- data.frame(otu_table(ps2.v3.cyto))
+df.ps2.v3.cyto <- data.frame(sample_data(ps2.v3.cyto)[, c(keyCytokines)])
+dt.ps2.v3.cyto.otu <- cbind(otu.ps2.v3.cyto, df.ps2.v3.cyto)
+
+dt.ps2.v3.pca <- PCA(scale(as.matrix(dt.ps2.v3.cyto.otu), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+fviz_pca_biplot(dt.ps2.v3.pca,
+             #individuals 
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.v3.cyto)))$sim_CST,
+             col.var = "black", 
+             
+             #variables
+             alpha.var =  "cos2", 
+             legend.title = "CSTs",
+             title = "PCA plot Showing the Relationship Between Bacteria and Super Cytokines",
+             repel = TRUE)+
+  scale_color_manual(name = "CSTs", breaks = CSTs_all, values = CSTsPalleteNamed)
+
+## Taxa and trending cytokines
+df.ps2.v3.cyto.tren <- data.frame(sample_data(ps2.v3.cyto)[, c(trendingCytokines)])
+dt.ps2.v3.cyto.otu.tren <- cbind(otu.ps2.v3.cyto, df.ps2.v3.cyto.tren)
+
+dt.ps2.v3.pca.tren <- PCA(scale(as.matrix(dt.ps2.v3.cyto.otu.tren), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+
+fviz_pca_biplot(dt.ps2.v3.pca.tren,
+             #individuals 
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.v3.cyto)))$sim_CST,
+             col.var = "black", 
+             arrowsize=0.8,
+             
+             #variables
+             alpha.var =  "cos2", 
+             legend.title = "CSTs",
+             title = "PCA plot Showing the Relationship Between Bacteria and Trending Cytokines",
+             repel = TRUE)+
+  scale_color_manual(name = "CSTs", breaks = CSTs_all, values = CSTsPalleteNamed)+ 
+  theme_minimal(base_size = 14) +
+  theme(text = element_text(face = "bold"))
+
+```
+
+### Combined distribution of most abundant taxa
+```{r bv-treated-cleared-recurred1, echo=FALSE}
+
+#ps2.v1v2v3 <- subset_taxa(ps2.v1v2v3, !(Species %in% NA | Species == ""))
+ps2.v1v2v3 <- prune_taxa(taxa_sums(ps2.v1v2v3) > 0, ps2.v1v2v3)
+
+#ps.ids9 <- transform_sample_counts(ps.ids9, function(x){x/sum(x)})
+ps2.v1v2v3.merged <- merge_less_than_top(ps2.v1v2v3, 8)
+
+#ps2.v1v2v3.glom <- tax_glom(ps2.v1v2v3.merged, taxrank = "Species")
+df.ps2.v1v2v3.glom <- psmelt(ps2.v1v2v3.merged)
+colourCount = length(unique(df.ps2.v1v2v3.glom$Sample))
+
+df.ps2.v1v2v3.glom_ <- df.ps2.v1v2v3.glom[order(-df.ps2.v1v2v3.glom[,"Abundance"]),]
+
+p <-  ggplot(df.ps2.v1v2v3.glom_,aes_string(x= "VisitCode", y="Abundance", fill = "Species")) +  
+            geom_bar(stat='identity') + 
+            scale_fill_manual(values=customPalette) +
+            #scale_fill_manual(values=getPalette(colourCount)) + 
+            theme_minimal() + 
+            theme(axis.text.x = element_text(angle = 45, hjust = 0),
+              panel.grid.major.x = element_blank() ,
+              panel.grid.major.y = element_line( size=.1, color="black" ))
+p
+ 
+```
+
+
+## BV Treated - Cleared - Recurred (At visit level)
+
+Here we consider the relative abundance of bacteria among the participants who were bv intermediate or positive, had cleared in visit2 and tested positive or intermediate in visit 3
+
+```{r bv-treated-cleared-recurred2, echo=FALSE}
+ids9 <- readRDS("results/recurredIds.RDS")
+ps.ids9 <- prune_samples(sample_data(ps2.v1v2v3)$ParticipantID %in% ids9, ps2.v1v2v3)
+
+ps.ids9 <- subset_taxa(ps.ids9, !(Species %in% NA | Species == ""))
+ps.ids9 <- prune_samples(sample_sums(ps.ids9) > 0, ps.ids9)
+ps.ids9 <- prune_taxa(taxa_sums(ps.ids9) > 0, ps.ids9)
+
+#ps.ids9 <- transform_sample_counts(ps.ids9, function(x){x/sum(x)})
+
+ps.ids9.merged <- merge_less_than_top(ps.ids9, 13)
+ps.ids9.glom <- tax_glom(ps.ids9.merged, taxrank = "Species")
+df9 <- psmelt(ps.ids9.glom)
+df9$ParticipantID <- as.character(df9$ParticipantID)
+
+p <-  ggplot(df9[order(-df9[,"Abundance"]),],aes_string(x= "VisitCode", y="Abundance", fill = "Species")) +  
+            geom_bar(stat='identity') + 
+            scale_fill_manual(values=customPalette) +
+            theme_minimal() + 
+            theme(axis.text.x = element_text(angle = 45, hjust = 0),
+              panel.grid.major.x = element_blank() ,
+              panel.grid.major.y = element_line( size=.1, color="black" ))
+p
+ 
+```
+### BV treated - cleared - recurred (at individual level)
+
+```{r}
+p <-  ggplot(df9[order(-df9[,"Abundance"]),],aes_string(x= "ParticipantID", y="Abundance", fill = "Species")) +  
+            geom_bar(stat='identity') + 
+            scale_fill_manual(values=customPalette) +
+            #scale_fill_viridis_d() +
+            facet_wrap(~VisitCode, scales = "free_x" ) + 
+            theme_minimal() + 
+            theme(axis.text.x = element_text(angle = 90, hjust = 0, size = 6),
+              panel.grid.major.x = element_blank() ,
+              panel.grid.major.y = element_line(size=.1, color="black"))
+p
+```
+
+### Transition of participants accross CSTs  
+
+```{r alluvial-plots, include=FALSE}
+
+library(alluvial)
+
+sample_data(ps2.v1.cst.glom.species.ra) <- sample_data(ps2.v1.cst.glom.species.ra)[order(sample_data(ps2.v1.cst.glom.species.ra)$SampleID, sample_data(ps2.v1.cst.glom.species.ra)$VisitCode),]
+
+sample_data(ps2.v2.cst.glom.species.ra) <- sample_data(ps2.v2.cst.glom.species.ra)[order(sample_data(ps2.v2.cst.glom.species.ra)$SampleID, sample_data(ps2.v2.cst.glom.species.ra)$VisitCode),]
+
+
+sample_data(ps2.v3.cst.glom.species.ra) <- sample_data(ps2.v3.cst.glom.species.ra)[order(sample_data(ps2.v3.cst.glom.species.ra)$SampleID, sample_data(ps2.v3.cst.glom.species.ra)$VisitCode),]
+
+
+alluvialData <- data.frame(Visit1 = sample_data(ps2.v1.cst.glom.species.ra)$sim_CST, 
+Visit2  = sample_data(ps2.v2.cst.glom.species.ra)$sim_CST, 
+Visit3  = sample_data(ps2.v3.cst.glom.species.ra)$sim_CST)
+
+alluvialData <- alluvialData %>% dplyr::group_by(Visit1, Visit2, Visit3) %>% dplyr::summarise(n = n()) 
+
+alluvialDataT <- as.data.frame(alluvialData)
+
+alluvial(
+    alluvialDataT[, 1:3 ],
+    freq=alluvialDataT$n,
+    col = ifelse( alluvialDataT$Visit1 == "I", CSTsPallete[1], 
+                  ifelse( alluvialDataT$Visit1 == "II", CSTsPallete[2], 
+                          ifelse( alluvialDataT$Visit1 == "III", CSTsPallete[3], 
+                                  ifelse( alluvialDataT$Visit1 == "IV-A", CSTsPallete[4],
+                                          ifelse(alluvialDataT$Visit1 == "IV-B", CSTsPallete[5],
+                                                 ifelse(alluvialDataT$Visit1 == "IV-C", CSTsPallete[6], 
+                                                        ifelse(alluvialDataT$Visit1 == "V", CSTsPallete[7], ""))))))),
+    border = c("white"),
+    alpha = 0.8,
+    blocks=FALSE,
+    axis_labels = c("Baseline", "6 weeks", "12 weeks")
+  )
+```
+When samples clustered together
+
+## Boxplot of samples cluster together
+```{r all-visits-stacked-barplot, echo=FALSE}
+
+#ps2.v3.cst.glom.species.ra <- subset_taxa(ps2.v3.cst.glom.species.ra, !(Species %in% NA | Species == ""))
+ps2.v1v2v3.glom.species.ra <- prune_taxa(taxa_sums(ps2.v1v2v3.glom.species.ra) > 0, ps2.v1v2v3.glom.species.ra)
+                                                                                  
+
+## Collapse to most important
+ps2.v1v2v3.cst.merged <- merge_less_than_top(ps2.v1v2v3.glom.species.ra)
+
+# agglomerate taxa
+glom <- tax_glom(ps2.v1v2v3.cst.merged, taxrank = 'Species')
+# create dataframe from phyloseq object
+dat <- data.table(psmelt(glom))
+# convert Phylum to a character vector from a factor because R
+dat$Species <- as.character(dat$Species)
+# group dataframe by Phylum, calculate median rel. abundance
+dat <- dat[, median := median(Abundance, na.rm = TRUE), by = "Phylum"]
+
+#sort samples by CSTs and Abundance
+dat$Abundance[is.nan(dat$Abundance)] <- 0
+dat <- dat[order(sim_CST, Abundance), ]
+dat$ParticipantID <- as.character(dat$ParticipantID)
+
+##
+
+#Bar plot
+colourCount = length(unique(dat$Sample))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+
+p <- ggplot(dat, aes(x=SampleID, y=Abundance, fill=Species)) + 
+        geom_bar(aes(), stat="identity", position="stack") + 
+        #scale_fill_manual(values=getPalette(colourCount)) + 
+        scale_fill_manual(values=customPalette) + 
+        theme(legend.position="bottom",
+        axis.text.x = element_text(size = 6, angle = 90),
+        legend.text = element_text(size = 8)) + 
+        facet_grid(. ~ sim_CST, drop=TRUE,scale="free",space="free_x") + 
+        guides(fill=guide_legend(nrow=4)) 
+
+p <- p+ theme(strip.background = element_rect(fill="white", colour = "white", size = 4),
+                    strip.text = element_text(face="bold", size=7),
+                    panel.spacing = unit(0, "lines") #get rid of facet margins
+              )
+g <- ggplot_gtable(ggplot_build(p))
+stripr <- which(grepl('strip-t', g$layout$name))
+fills <- CSTsPalleteNamed[levels(dat$sim_CST)]  
+k <- 1
+for (i in stripr) {
+j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
+g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
+k <- k+1
+}
+grid.newpage()
+grid.draw(g)
+```
+
+Alluvial plot of samples clustered together
+
+```{r alluvial-plot-samples-clustered-together, echo=TRUE}
+
+ps2.v1.alluv <- subset_samples(ps2.v1v2v3.glom.species.ra, VisitCode == 1000)  
+ps2.v1.alluv_sd <- data.frame(sample_data(ps2.v1.alluv)[order(sample_data(ps2.v1.alluv)$SampleID, sample_data(ps2.v1.alluv)$VisitCode),])
+
+ps2.v2.alluv <- subset_samples(ps2.v1v2v3.glom.species.ra, VisitCode == 1020)
+ps2.v2.alluv_sd <- data.frame(sample_data(ps2.v2.alluv)[order(sample_data(ps2.v2.alluv)$SampleID, sample_data(ps2.v2.alluv)$VisitCode),])
+
+ps2.v3.alluv <- subset_samples(ps2.v1v2v3.glom.species.ra, VisitCode == 1030)
+ps2.v3.alluv_sd <-  data.frame(sample_data(ps2.v3.alluv)[order(sample_data(ps2.v3.alluv)$SampleID, sample_data(ps2.v3.alluv)$VisitCode),])
+
+alluvialData1 <- inner_join(ps2.v1.alluv_sd[, c("ParticipantID", "sim_CST")], ps2.v2.alluv_sd[, c("ParticipantID", "sim_CST")], by = "ParticipantID")
+alluvialData1 <- inner_join(alluvialData1, ps2.v3.alluv_sd[, c("ParticipantID", "sim_CST")], by = "ParticipantID")
+alluvialData1 <- alluvialData1[, (2:4)]
+colnames(alluvialData1) <- c("Visit1", "Visit2", "Visit3")
+alluvialData1 <- alluvialData1 %>% dplyr::group_by(Visit1, Visit2, Visit3) %>% dplyr::summarise(n = n()) 
+alluvial(
+    alluvialData1[, 1:3],
+    freq=alluvialData1$n,
+    col = ifelse( alluvialData1$Visit1 == "I", CSTsPallete[1], 
+                  ifelse( alluvialData1$Visit1 == "II", CSTsPallete[2], 
+                          ifelse( alluvialData1$Visit1 == "III", CSTsPallete[3], 
+                                  ifelse( alluvialData1$Visit1 == "IV-A", CSTsPallete[4],  
+                                          ifelse( alluvialData1$Visit1 == "IV-B", CSTsPallete[5], 
+                                                  ifelse( alluvialData1$Visit1 == "IV-C", CSTsPallete[6], 
+                                                          ifelse( alluvialData1$Visit1 == "V", CSTsPallete[7], ""))))))),
+    border = c("white"),
+    alpha = 0.8,
+    blocks=FALSE,
+    axis_labels = c("Baseline", "6 weeks", "3 months")
+  )
+```
+### Stats / Proportions
+```{r}
+
+tab_v1_sim_CST <- table(ps2.v1.alluv_sd$sim_CST)
+tab_v2_sim_CST <- table(ps2.v2.alluv_sd$sim_CST)
+tab_v3_sim_CST <- table(ps2.v3.alluv_sd$sim_CST)
+
+distn_df <-  data.frame(I=c(1,2,3), III=c(15,22,26), 'IV-A'=c(17,11,7), 'IV-B'=c(23,20,20), 'IV-C'=c(0,1,0))
+rownames(distn_df) <- c("Visit1", "Visit2", "Visit3")
+distn_df
+
+distn_prop_df <- apply(distn_df, 1 , function(x) x/sum(x))
+distn_prop_df
+
+```
+
+
+### PCA biplot of V1 V2 taxa and cytokine fold change
+
+```{r correlate-pro-inf-cytokines-tax-lg, echo=TRUE}
+library(corrplot)
+profInfC <- c("TNF.b"  , "IL.12p40" , "IL.12p70" , "IL.1a" , "IL.6" , "TNF.a" , "IL.1b", "IL.18" , "MIF" , "TRAIL")
+
+
+#View(data.frame(sample_data(ps2.v1v2v3.cst.glom.Species.ra)))
+ps2.v1.cyto <- prune_samples(sample_data(ps2.v1v2v3.glom.species.ra)$VisitCode == 1000, ps2.v1v2v3.glom.species.ra)
+ps2.v1.cyto <- prune_taxa(taxa_sums(ps2.v1.cyto) > 0, ps2.v1.cyto)
+
+ps2.v2.cyto <- prune_samples(sample_data(ps2.v1v2v3.glom.species.ra)$VisitCode == 1020, ps2.v1v2v3.glom.species.ra)
+ps2.v2.cyto <- prune_taxa(taxa_sums(ps2.v2.cyto) > 0, ps2.v2.cyto)
+
+visit1cyto <- subset(data.frame(sample_data(ps2.v1v2v3.glom.species.ra)), VisitCode == 1000, select = c("TNF.b"  , "IL.12p40" , "IL.12p70" , "IL.1a" , "IL.6" , "TNF.a" , "IL.1b", "IL.18" , "MIF" , "TRAIL"))
+visit2cyto <- subset(data.frame(sample_data(ps2.v1v2v3.glom.species.ra)), VisitCode == 1020, select = c("TNF.b"  , "IL.12p40" , "IL.12p70" , "IL.1a" , "IL.6" , "TNF.a" , "IL.1b", "IL.18" , "MIF" , "TRAIL"))
+
+visit1cyto$PID <- as.numeric(substr(rownames(visit1cyto), 1, nchar(rownames(visit1cyto))-1))
+visit2cyto$PID <- as.numeric(substr(rownames(visit2cyto), 1, nchar(rownames(visit2cyto))-1))
+
+
+idsInBoth <- intersect(visit1cyto$PID, visit2cyto$PID)
+
+visit1cyto <- visit1cyto[visit1cyto$PID %in% idsInBoth, ]
+visit2cyto <- visit2cyto[visit2cyto$PID %in% idsInBoth, ]
+
+## order by rownames of v2c
+visit1cyto <- visit1cyto[with(visit2cyto, order(rownames(visit1cyto))), ]
+visit12FC <- (visit2cyto - visit1cyto[with(visit2cyto, order(rownames(visit1cyto))), ])
+visit12FC$PID <- NULL ##drop PID column
+
+
+##V1 samples
+V1_otu_tab <- data.frame(otu_table(ps2.v1.cyto))
+V1_otu_tab1 <- as.data.frame(t(V1_otu_tab))
+V1_otu_tab1$OTU <- rownames(V1_otu_tab1)
+
+V1_tax_tab <- data.frame(tax_table(ps2.v1.cyto))
+V1_tax_tab$OTU <- rownames(V1_tax_tab)
+
+otuWSpeciesV1 <- merge(V1_otu_tab1, V1_tax_tab[, c("OTU", "Species")], by = "OTU")
+otuWSpeciesV1 <- otuWSpeciesV1[, -1]
+otuWSpeciesV1 <- otuWSpeciesV1[!duplicated(otuWSpeciesV1$Species),]
+rownames(otuWSpeciesV1) <- otuWSpeciesV1$Species
+t.otuWSpeciesV1 <- data.frame(t(otuWSpeciesV1[, -ncol(otuWSpeciesV1)]))
+
+
+##V2 samples
+V2_otu_tab <- data.frame(otu_table(ps2.v2.cyto))
+V2_otu_tab1 <- as.data.frame(t(V2_otu_tab))
+V2_otu_tab1$OTU <- rownames(V2_otu_tab1)
+
+V2_tax_tab <- data.frame(tax_table(ps2.v2.cyto))
+V2_tax_tab$OTU <- rownames(V2_tax_tab)
+
+otuWSpeciesV2 <- merge(V2_otu_tab1, V1_tax_tab[, c("OTU", "Species")], by = "OTU")
+otuWSpeciesV2 <- otuWSpeciesV2[, -1]
+otuWSpeciesV2 <- otuWSpeciesV2[!duplicated(otuWSpeciesV2$Species),]
+rownames(otuWSpeciesV2) <- otuWSpeciesV2$Species
+t.otuWSpeciesV2 <- data.frame(t(otuWSpeciesV2[, -ncol(otuWSpeciesV2)]))
+
+## resolve ids
+t.otuWSpeciesV1$PID <- as.numeric(substr(rownames(t.otuWSpeciesV1), 1, nchar(rownames(t.otuWSpeciesV1))-1))
+t.otuWSpeciesV2$PID <- as.numeric(substr(rownames(t.otuWSpeciesV2), 1, nchar(rownames(t.otuWSpeciesV2))-1))
+
+## Taxa in both
+taxaInBoth <- intersect(colnames(t.otuWSpeciesV1), colnames(t.otuWSpeciesV2))
+
+t.otuWSpeciesV1 <- t.otuWSpeciesV1[t.otuWSpeciesV1$PID %in% idsInBoth, taxaInBoth]
+t.otuWSpeciesV2 <- t.otuWSpeciesV2[t.otuWSpeciesV2$PID %in% idsInBoth, taxaInBoth]
+
+
+##Fold Change
+otuWSpeciesFC <- (t.otuWSpeciesV2 - t.otuWSpeciesV1[with(t.otuWSpeciesV2, order(rownames(t.otuWSpeciesV1))), ])
+otuWSpeciesFC$PID <- NULL ##drop PID column
+
+cyto.spec <- cbind(otuWSpeciesFC, visit12FC)
+cyto.spec.pca <- PCA(scale(as.matrix(cyto.spec), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+
+corrplot::corrplot(cor(otuWSpeciesFC , visit12FC), type="full",
+         p.mat = cyto.spec.pca$P, sig.level = 0.001, insig = "blank")
+#par(cex = cex.before)
+
+v2sd <- data.frame(sample_data(ps2.v2.cyto))
+ps2.v2.cyto.ha <- subset_samples(ps2.v2.cyto, get_variable(ps2.v2.cyto, "ParticipantID") %in% idsInBoth)
+fviz_pca_biplot(cyto.spec.pca,
+             #individuals
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.v2.cyto.ha)))$sim_CST,
+             col.var = "black",
+
+             #variables
+             alpha.var =  "cos2",
+             palette = CSTsPallete,
+             legend.title = "sim_CST",
+             title = "PCA plot Showing the Relationship Between Bacteria and Proinflammatory Cytokines",
+             repel = TRUE)+
+  scale_color_brewer(palette="Dark2")+
+  theme_minimal(base_size = 14) +
+  theme(text = element_text(face = "bold"))
+
+
+## Visit 2 (treatment)
+ps2.v2.cst.glom.species.ra <- subset_samples(ps2.v1v2v3.glom.species.ra, get_variable(ps2.v1v2v3.glom.species.ra, "VisitCode") == 1020)
+ps2.v2.cst.glom.species.ra <- prune_taxa(taxa_sums(ps2.v2.cst.glom.species.ra) >0, ps2.v2.cst.glom.species.ra)
+ps2.v2.cst.glom.species.ra
+
+keyCytokines <- c("G.CSF", "IL.1a", "IL.1b", "M.CSF")
+
+ps2.v2.cyto <- subset_taxa(ps2.v2.cst.glom.species.ra, Species %in% keyTaxa)
+taxa_names(ps2.v2.cyto) <- tax_table(ps2.v2.cyto)[, "Species"]
+
+otu.ps2.v2.cyto <- data.frame(otu_table(ps2.v2.cyto))
+df.ps2.v2.cyto <- data.frame(sample_data(ps2.v2.cyto)[, c(keyCytokines)])
+dt.ps2.v2.cyto.otu <- cbind(otu.ps2.v2.cyto, df.ps2.v2.cyto)
+
+dt.ps2.v2.pca <- PCA(scale(as.matrix(dt.ps2.v2.cyto.otu), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+fviz_pca_biplot(dt.ps2.v2.pca,
+             #individuals
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.v2.cyto)))$sim_CST,
+             col.var = "black",
+
+             #variables
+             alpha.var =  "cos2",
+             palette = CSTsPallete,
+             legend.title = "sim_CST",
+             title = "PCA plot Showing the Relationship Between Bacteria and Proinflammatory Cytokines",
+             repel = TRUE)+
+  scale_color_brewer(palette="Dark2")+
+  theme_minimal(base_size = 14) +
+  theme(text = element_text(face = "bold"))
+
+
+### Correlation analyses:
+library("Hmisc")
+
+flattenCorrMatrix <- function(cormat, pmat) {
+  ut <- upper.tri(cormat)
+  data.frame(
+    row = rownames(cormat)[row(cormat)[ut]],
+    column = rownames(cormat)[col(cormat)[ut]],
+    cor  =(cormat)[ut],
+    p = pmat[ut]
+    )
+}
+
+res2<-rcorr(as.matrix(dt.ps2.v2.cyto.otu))
+
+flattenCorrMatrix(res2$r, res2$P)
+```
+
+
+
+### Additional PCA Plots
+
+Only Cleared
+```{r visit2-and3-cleared}
+
+sig.cyto.cleared <- c("TNF.a", "IL.1b", "LIF", "GM.CSF", "IL.8") ## CLEARANCE
+sig.cyto.persisted <- c("LIF", "IL.7", "MCP.1", "IP.10", "MIF", "IL.18", "IL.1a") ## PERSISTENCE
+sig.cyto.recurred <- c("M.CSF", "IFN.g", "IL.2Ra", "TNF.b", "MIF", "IL.18", "MCP.3") ## RECURRENT
+
+##Get the ids
+pids <- sample_data(ps2.v1.cst.glom.species.ra)$ParticipantID
+
+##Remove extra ids in 2 and 3
+ps2.v2.cst.glom.species.ra <- subset_samples(ps2.v2.cst.glom.species.ra, sample_data(ps2.v2.cst.glom.species.ra)$ParticipantID %in% pids)
+ps2.v2.cst.glom.species.ra <- prune_taxa(taxa_sums(ps2.v2.cst.glom.species.ra) > 0, ps2.v2.cst.glom.species.ra)
+
+ps2.v3.cst.glom.species.ra <- subset_samples(ps2.v3.cst.glom.species.ra, sample_data(ps2.v3.cst.glom.species.ra)$ParticipantID %in% pids)
+ps2.v3.cst.glom.species.ra <- prune_taxa(taxa_sums(ps2.v3.cst.glom.species.ra) > 0, ps2.v3.cst.glom.species.ra)
+
+
+sd_wide <- data.frame(cbind(sample_data(ps2.v1.cst.glom.species.ra), sample_data(ps2.v2.cst.glom.species.ra), sample_data(ps2.v3.cst.glom.species.ra)))
+sd_wide$bv.cleared.2[ (sd_wide$bvscat.2 == "Negative")] <- 1
+table(sd_wide$bv.cleared.2)
+
+sd_wide$bv.persisted.2[ (sd_wide$bvscat.1 %in% c("Intermediate", "BV") & sd_wide$bvscat.2 %in% c("Intermediate", "BV"))] <- 1
+table(sd_wide$bv.persisted.2)
+
+sd_wide$bv.recurred.2[ (sd_wide$bvscat.1  == "Negative" & sd_wide$bvscat.2 %in% c("Intermediate", "BV"))] <- 1
+table(sd_wide$bv.recurred.2)
+
+sd_wide$RowNo <- NULL
+
+sdv1 <- sd_wide[,c(1:86)]
+
+sdv2 <- sd_wide[,c(87:172)]
+names(sdv2) <- names(sdv1)
+
+sdv3 <- sd_wide[,c(173:258)]
+names(sdv3) <- names(sdv1)
+
+sdv1v2v3 <- rbind(sdv1, sdv2, sdv3)
+#View(sdv1v2v3)
+
+bv.cleared.ids <- (sdv1v2v3[sdv1v2v3$bv.cleared == 1, ])$SampleID
+
+ps2.cleared.cyto <- subset_samples(ps2.v1v2v3.glom.species.ra, sample_data(ps2.v1v2v3.glom.species.ra)$SampleID %in% bv.cleared.ids)
+ps2.cleared.cyto <- subset_taxa(ps2.cleared.cyto, Species %in% keyTaxa)
+ps2.cleared.cyto <- prune_taxa(taxa_sums(ps2.cleared.cyto) >0, ps2.cleared.cyto)
+
+taxa_names(ps2.cleared.cyto) <- tax_table(ps2.cleared.cyto)[, "Species"]
+otu.ps2.cleared.cyto <- data.frame(otu_table(ps2.cleared.cyto))
+
+df.ps2.cleared.cyto <- data.frame(sample_data(ps2.cleared.cyto)[, c(sig.cyto.cleared)])
+dt.ps2.cleared.cyto.otu <- cbind(otu.ps2.cleared.cyto, df.ps2.cleared.cyto)
+
+dt.ps2.cleared.pca <- PCA(scale(as.matrix(dt.ps2.cleared.cyto.otu), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+fviz_pca_biplot(dt.ps2.cleared.pca,
+             #individuals 
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.cleared.cyto)))$sim_CST,
+             col.var = "black", 
+             arrowsize=1,
+             
+             #variables
+             alpha.var =  "cos2", 
+             palette = CSTsPallete,
+             legend.title = "sim_CST",
+             title = "PCA plot Showing the Relationship Between Bacteria and Cytokines Significant in the Cleared Category",
+             repel = TRUE) +
+  scale_color_brewer(palette="Dark2")+ 
+  theme_minimal(base_size = 14) +
+  theme(text = element_text(face = "bold"))
+
+res3<-rcorr(as.matrix(dt.ps2.cleared.cyto.otu))
+flattenCorrMatrix(res3$r, res3$P)
+```
+
+
+
+Only persisted
+```{r}
+bv.persisted.ids <- (sdv1v2v3[sdv1v2v3$bv.persisted == 1, ])$SampleID
+
+ps2.persisted.cyto <- subset_samples(ps2.v1v2v3.glom.species.ra, sample_data(ps2.v1v2v3.glom.species.ra)$SampleID %in% bv.persisted.ids)
+ps2.persisted.cyto <- subset_taxa(ps2.persisted.cyto, Species %in% keyTaxa)
+ps2.persisted.cyto <- prune_taxa(taxa_sums(ps2.persisted.cyto) > 0, ps2.persisted.cyto)
+
+taxa_names(ps2.persisted.cyto) <- tax_table(ps2.persisted.cyto)[, "Species"]
+otu.ps2.persisted.cyto <- data.frame(otu_table(ps2.persisted.cyto))
+
+df.ps2.persisted.cyto <- data.frame(sample_data(ps2.persisted.cyto)[, c(sig.cyto.persisted)])
+dt.ps2.persisted.cyto.otu <- cbind(otu.ps2.persisted.cyto, df.ps2.persisted.cyto)
+
+dt.ps2.persisted.pca <- PCA(scale(as.matrix(dt.ps2.persisted.cyto.otu), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+fviz_pca_biplot(dt.ps2.persisted.pca,
+             #individuals 
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.persisted.cyto)))$sim_CST,
+             col.var = "black", 
+             arrowsize=1,
+             
+             #variables
+             alpha.var =  "cos2", 
+             palette = CSTsPallete,
+             legend.title = "sim_CST",
+             title = "PCA plot Showing the Relationship Between Bacteria and Cytokines in the Persisted Category",
+             repel = TRUE)+
+  scale_color_brewer(palette="Dark2")+ 
+  theme_minimal(base_size = 14) +
+  theme(text = element_text(face = "bold"))
+
+res4<-rcorr(as.matrix(dt.ps2.persisted.cyto.otu))
+flattenCorrMatrix(res4$r, res4$P)
+```
+
+
+Only recurred
+```{r}
+bv.recurred.ids <- (sdv1v2v3[sdv1v2v3$bv.recurred == 1, ])$SampleID
+
+ps2.recurred.cyto <- subset_samples(ps2.v1v2v3.glom.species.ra, sample_data(ps2.v1v2v3.glom.species.ra)$SampleID %in% bv.recurred.ids)
+ps2.recurred.cyto <- subset_taxa(ps2.recurred.cyto, Species %in% keyTaxa)
+ps2.recurred.cyto <- prune_taxa(taxa_sums(ps2.recurred.cyto) >0, ps2.recurred.cyto)
+
+taxa_names(ps2.recurred.cyto) <- tax_table(ps2.recurred.cyto)[, "Species"]
+otu.ps2.recurred.cyto <- data.frame(otu_table(ps2.recurred.cyto))
+
+df.ps2.recurred.cyto <- data.frame(sample_data(ps2.recurred.cyto)[, c(sig.cyto.recurred)])
+dt.ps2.recurred.cyto.otu <- cbind(otu.ps2.recurred.cyto, df.ps2.recurred.cyto)
+
+dt.ps2.recurred.pca <- PCA(scale(as.matrix(dt.ps2.recurred.cyto.otu), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+fviz_pca_biplot(dt.ps2.recurred.pca,
+             #individuals 
+             geom.ind = "point", # show points only (but not "text"),
+             habillage = (data.frame(sample_data(ps2.recurred.cyto)))$sim_CST,
+             col.var = "black", 
+             arrowsize=1,
+          
+             #variables
+             alpha.var =  "cos2", 
+             #addEllipses = TRUE, # Concentration ellipses
+             #ellipse.level=0.95,
+             palette = CSTsPallete,
+             legend.title = "sim_CST",
+             title = "PCA plot Showing the Relationship Between Bacteria and Cytokines in the recurred Category",
+             label = "var", 
+             repel = TRUE)+
+  scale_color_brewer(palette="Dark2")+ 
+  theme_minimal(base_size = 14) +
+  theme(text = element_text(face = "bold"))
+
+
+res5<-rcorr(as.matrix(dt.ps2.recurred.cyto.otu))
+flattenCorrMatrix(res5$r, res5$P)
+```
+
+
+
+## DESeq2 
+```{r }
+
+#Testing for taxa which are affected by treatment (between visits)
+ps2.v1v2v3.ds <- subset_samples(ps1, get_variable(ps2.v1v2v3, "ParticipantID") %in% ps2.v1v2v3.ids)
+ps2.v1v2v3.ds <- prune_samples(sample_sums(ps2.v1v2v3) > 2000, ps2.v1v2v3)
+ps2.v1v2v3.ds <- prune_taxa(taxa_sums(ps2.v1v2v3) > 0, ps2.v1v2v3)
+ps2.v1v2v3.ds
+
+ps2.v1v2v3.ds.glom <- tax_glom(ps2.v1v2v3.ds, "Species")
+
+sample_data(ps2.v1v2v3.ds.glom)$ParticipantID <- as.factor(sample_data(ps2.v1v2v3.ds.glom)$ParticipantID)
+sample_data(ps2.v1v2v3.ds.glom)$VisitCode <- as.factor(sample_data(ps2.v1v2v3.ds.glom)$VisitCode)
+sample_data(ps2.v1v2v3.ds.glom)$STI <- as.factor(sample_data(ps2.v1v2v3.ds.glom)$STI)
+
+## step up otu_table
+otu_table(ps2.v1v2v3.ds.glom) <- otu_table(ps2.v1v2v3.ds.glom) + 1
+ds.ps2.v1v2v3 <- phyloseq_to_deseq2(ps2.v1v2v3.ds.glom, design = ~ VisitCode)
+
+# calculate geometric means prior to estimate size factors
+gm_mean = function(x, na.rm=TRUE){
+  exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
+}
+geoMeans = apply(counts(ds.ps2.v1v2v3), 1, gm_mean)
+ds.ps2.v1v2v3 = estimateSizeFactors(ds.ps2.v1v2v3, geoMeans = geoMeans)
+
+#Run DESeq2
+dds.ps2.v1v2v3 = DESeq(ds.ps2.v1v2v3, test="LRT", fitType = "local", reduced = ~1)
+
+#Plot dispersion
+plotDispEsts(dds.ps2.v1v2v3)
+
+#Process DESeq results
+resultsNames(dds.ps2.v1v2v3)
+
+##V1v2 comparison
+res.dds.ps2.v1v2 <- results(dds.ps2.v1v2v3, contrast = c("VisitCode", "1020", "1000"))
+res.dds.ps2.v1v2$symbol <- mcols(dds.ps2.v1v2v3)$symbol
+summary(res.dds.ps2.v1v2)
+write.table(res.dds.ps2.v1v2, file = "results/res.dds.ps2.v1v2.txt", sep = "\t")
+
+nrow(res.dds.ps2.v1v2)
+df.v1v2.res <- as.data.frame(res.dds.ps2.v1v2[which(res.dds.ps2.v1v2$padj < 0.05), ])
+nrow(df.v1v2.res)
+
+
+#Create taxa table
+tax.table.v1v2v3 <- data.frame(tax_table(ps2.v1v2v3.ds.glom))
+
+df.v1v2.rdp <- merge(df.v1v2.res, tax.table.v1v2v3, by = "row.names", all.x = TRUE) ##merge on row names
+colnames(df.v1v2.rdp)
+write.table(df.v1v2.rdp, file = "results/df_deseq2_results_v1v2.txt", sep = "\t")
+
+  p.diffab <- ggplot(df.v1v2.rdp, aes(x = Phylum, y = log2FoldChange, color = Family)) +
+    geom_jitter(size = 2, alpha = 0.7, width = 0.1) +
+    geom_hline(yintercept = 0, lty = 2) +
+    ylim(-50, 50)
+  p.diffab
+
+# Deseq results volcano plot
+ library(EnhancedVolcano)
+ rownames_deseq_res <- rownames(res.dds.ps2.v1v2)
+
+ rownames(res.dds.ps2.v1v2) <- paste0("ASV", seq(1:nrow(res.dds.ps2.v1v2)))
+ tax.table.v1v2v3 <- tax.table.v1v2v3[order(rownames(res.dds.ps2.v1v2)),] 
+ rownames(res.dds.ps2.v1v2) <- tax.table.v1v2v3$Species
+ EnhancedVolcano(res.dds.ps2.v1v2,
+         lab = rownames(res.dds.ps2.v1v2), #Use names of bacteria instead of sequences
+         x = "log2FoldChange",
+         y = "pvalue",
+         pCutoff = 0.05,
+         FCcutoff = 1.5,
+         transcriptPointSize = 1.5,
+         transcriptLabSize = 3.0,
+         title = "FMT Fold2foldChange V1V2") 
+ 
+ 
+##V2v3 comparison
+res.dds.ps2.v2v3 <- results(dds.ps2.v1v2v3, contrast = c("VisitCode", "1020", "1030"))
+res.dds.ps2.v2v3$symbol <- mcols(dds.ps2.v1v2v3)$symbol
+summary(res.dds.ps2.v2v3)
+write.table(res.dds.ps2.v2v3, file = "results/res.dds.ps2.v2v3.txt", sep = "\t")
+
+nrow(res.dds.ps2.v2v3)
+df.v2v3.res <- as.data.frame(res.dds.ps2.v2v3[which(res.dds.ps2.v2v3$padj < 0.05), ])
+nrow(df.v2v3.res)
+
+
+df.v2v3.rdp <- merge(df.v2v3.res, tax.table.v1v2v3, by = "row.names", all.x = TRUE) ##merge on row names
+colnames(df.v2v3.rdp)
+write.table(df.v2v3.rdp, file = "results/df_deseq2_results_v2v3.txt", sep = "\t")
+
+  p.diffab <- ggplot(df.v2v3.rdp, aes(x = Phylum, y = log2FoldChange, color = Family)) +
+    geom_jitter(size = 2, alpha = 0.7, width = 0.1) +
+    geom_hline(yintercept = 0, lty = 2) +
+    ylim(-50, 50)
+  p.diffab
+
+# Deseq results volcano plot
+ library(EnhancedVolcano)
+ rownames_deseq_res <- rownames(res.dds.ps2.v2v3)
+
+ rownames(res.dds.ps2.v2v3) <- paste0("ASV", seq(1:nrow(res.dds.ps2.v2v3)))
+ tax.table.v1v2v3 <- tax.table.v1v2v3[order(rownames(res.dds.ps2.v2v3)),] 
+ rownames(res.dds.ps2.v2v3) <- tax.table.v1v2v3$Species
+ EnhancedVolcano(res.dds.ps2.v2v3,
+         lab = rownames(res.dds.ps2.v2v3), #Use names of bacteria instead of sequences
+         x = "log2FoldChange",
+         y = "pvalue",
+         pCutoff = 0.05,
+         FCcutoff = 1.5,
+         transcriptPointSize = 1.5,
+         transcriptLabSize = 3.0,
+         title = "FMT Fold2foldChange V1V3") #+
+  #coord_fixed(ratio = 1.0)
+
+
+```

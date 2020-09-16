@@ -1,0 +1,7 @@
+"0","  #stat_compare_means(aes(label = ..p.signif..) )     # Add global p-value"
+"0","## Start with Cytokines from Andile"
+"0","# No-STIs vs Cytokines (IL.1b)"
+"0","#compare_means(IL.1b ~ CSTs, dt.ps1.NoSTIs)"
+"0","p.noSTIs.IL.1b <- ggboxplot(dt.ps1.NoSTIs, x = ""sim_CST"", y = ""IL.1b"", color = ""sim_CST"", palette = CSTsPallete, add = ""jitter"", xlab = ""sim_CST"") +"
+"0","  theme_light()"
+"0","p.noSTIs.IL.1b + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"

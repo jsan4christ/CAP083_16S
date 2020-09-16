@@ -1,0 +1,5 @@
+"0","##Extract PC1"
+"0","pcs_samples_cyt <- data.frame(cyto.all.pca_cyt$ind$coord)"
+"0","ps2.v1v2v3.cst.glom.species.ra.sd <- data.frame(sample_data(ps2.v1v2v3.cst.glom.species.ra))[, c(""SampleID"",""ParticipantID"", ""CSTs"", ""Trichomoniasis"", ""Gonorrhoea"", ""Chlamydia"", ""HSV.2"", ""STI"", ""Inflammation"", ""PSA"", ""bvscat"")]"
+"0","pca_data_ct <- cbind(ps2.v1v2v3.cst.glom.species.ra.sd, cyto.all_cyt, PC1 = pcs_samples_cyt$Dim.1,  PC2 = pcs_samples_cyt$Dim.2)"
+"0","#View(pca_data_ct)"

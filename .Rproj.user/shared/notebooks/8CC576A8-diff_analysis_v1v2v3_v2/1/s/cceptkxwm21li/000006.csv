@@ -1,0 +1,6 @@
+"0","cyto.spec.pca <- PCA(scale(as.matrix(cyto.spec), center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+"
+"2","Missing values are imputed by the mean of the variable: you should use the imputePCA function of the missMDA package"
+"2","Error in eigen(crossprod(t(X), t(X)), symmetric = TRUE) : 
+  infinite or missing values in 'x'
+"

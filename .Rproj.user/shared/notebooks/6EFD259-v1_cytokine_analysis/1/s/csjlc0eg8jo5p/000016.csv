@@ -1,0 +1,8 @@
+"0","  #stat_compare_means(aes(label = ..p.signif..), method = ""kruskal.test"")"
+"0","## Add cytokines Melis"
+"0","# STIs vs Cytokines (IL.12p70)"
+"0","#compare_means(IL.12p70 ~ CSTs, dt.ps1.STIs)"
+"0","# Visualize"
+"0","p.STIs.IL.12p70 <- ggboxplot(dt.ps1.STIs, x = ""sim_CST"", y = ""IL.12p70"", color = ""sim_CST"", palette = CSTsPallete, add = ""jitter"") +"
+"0","  theme_light()"
+"0","p.STIs.IL.12p70 + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"

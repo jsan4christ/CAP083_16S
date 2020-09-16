@@ -1,0 +1,8 @@
+"0","# PCoA plots -color: visitcode"
+"0","sample_data(ps2.v1v2v3.glom.species.ra)$RowNo <- paste(seq_along(1 : nrow(sample_data(ps2.v1v2v3.glom.species.ra))))"
+"0","p.ord.ps2.v1v2v3.glom.species.ra.pcoa.bray.visits <- plot_ordination(ps2.v1v2v3.glom.species.ra, "
+"0","                                                                     ord.ps2.v1v2v3.glom.species.ra.pcoa.bray, color = ""bvscat"", shape = ""STI"", "
+"0","                                                                     type = ""samples"", title = ""Bray Curtis Accross Visits"") +"
+"0","  #geom_text_repel(aes(label = RowNo), direction = ""x"") +"
+"0","  theme_light() "
+"0","p.ord.ps2.v1v2v3.glom.species.ra.pcoa.bray.visits + geom_point(size=1)"

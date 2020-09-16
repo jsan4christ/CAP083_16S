@@ -1,0 +1,61 @@
+"0","#Testing for taxa which are affected by treatment (between visits)"
+"0","ps2.v1v2v3.ds <- subset_samples(ps1, get_variable(ps2.v1v2v3, ""ParticipantID"") %in% ps2.v1v2v3.ids)"
+"0","ps2.v1v2v3.ds <- prune_samples(sample_sums(ps2.v1v2v3) > 2000, ps2.v1v2v3)"
+"0","ps2.v1v2v3.ds <- prune_taxa(taxa_sums(ps2.v1v2v3) > 0, ps2.v1v2v3)"
+"0","ps2.v1v2v3.ds"
+"1","phyloseq-class experiment-level object"
+"1","
+"
+"1","otu_table()   OTU Table:         [ 262 taxa and 168 samples ]"
+"1","
+"
+"1","sample_data() Sample Data:       [ 168 samples by 82 sample variables ]"
+"1","
+"
+"1","tax_table()   Taxonomy Table:    [ 262 taxa by 7 taxonomic ranks ]"
+"1","
+"
+"1","phy_tree()    Phylogenetic Tree: [ 262 tips and 260 internal nodes ]"
+"1","
+"
+"0","ps2.v1v2v3.ds.glom <- tax_glom(ps2.v1v2v3.ds, ""Species"")"
+"0","sample_data(ps2.v1v2v3.ds.glom)$ParticipantID <- as.factor(sample_data(ps2.v1v2v3.ds.glom)$ParticipantID)"
+"0","sample_data(ps2.v1v2v3.ds.glom)$VisitCode <- as.factor(sample_data(ps2.v1v2v3.ds.glom)$VisitCode)"
+"0","sample_data(ps2.v1v2v3.ds.glom)$STI <- as.factor(sample_data(ps2.v1v2v3.ds.glom)$STI)"
+"0","#ds.ps2.v1v2 <- phyloseq_to_deseq2(ps2.v1v2.1, design = ~ VisitCode + bvscat + VisitCode:bvscat)"
+"0","## step up otu_table"
+"0","otu_table(ps2.v1v2v3.ds.glom) <- otu_table(ps2.v1v2v3.ds.glom) + 1"
+"0","ds.ps2.v1v2v3 <- phyloseq_to_deseq2(ps2.v1v2v3.ds.glom, design = ~ VisitCode)"
+"2","converting counts to integer mode
+"
+"0","# calculate geometric means prior to estimate size factors"
+"0","gm_mean = function(x, na.rm=TRUE){"
+"0","  exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))"
+"0","}"
+"0","geoMeans = apply(counts(ds.ps2.v1v2v3), 1, gm_mean)"
+"0","ds.ps2.v1v2v3 = estimateSizeFactors(ds.ps2.v1v2v3, geoMeans = geoMeans)"
+"0","#Run DESeq2"
+"0","#dds.ps2.v1v2 = DESeq(ds.ps2.v1v2, test=""LRT"", fitType = ""local"", reduced = ~ VisitCode + bvscat)"
+"0","dds.ps2.v1v2v3 = DESeq(ds.ps2.v1v2v3, test=""LRT"", fitType = ""local"", reduced = ~1)"
+"2","using pre-existing size factors
+"
+"2","estimating dispersions
+"
+"2","gene-wise dispersion estimates
+"
+"2","mean-dispersion relationship
+"
+"2","final dispersion estimates
+"
+"2","fitting model and testing
+"
+"2","-- replacing outliers and refitting for 15 genes
+-- DESeq argument 'minReplicatesForReplace' = 7 
+-- original counts are preserved in counts(dds)
+"
+"2","estimating dispersions
+"
+"2","fitting model and testing
+"
+"0","#Plot dispersion"
+"0","plotDispEsts(dds.ps2.v1v2v3)"

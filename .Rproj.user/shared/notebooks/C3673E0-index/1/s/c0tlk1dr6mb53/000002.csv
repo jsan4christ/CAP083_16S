@@ -1,0 +1,6 @@
+"0","## CSTs custom color color pallete"
+"0","CSTsPallete <- c(""#7CAE00"", ""#00BFC4"", ""#C77CFF"",  ""#F8766D"", ""#6699CC"", ""pink"", ""blue"", ""purple"", ""orange"")"
+"0","visitsPallet <- c(""lightskyblue4"", ""red"", ""lightskyblue"")"
+"0","proInfC <- c(""TNF.b""  , ""IL.12p40"" , ""IL.12p70"" , ""IL.1a"" , ""IL.6"" , ""TNF.a"" , ""IL.1b"", ""IL.18"" , ""MIF"" , ""TRAIL"")"
+"0","allCytokineColnames <- c(""IL.1a"",""IL.1b"",""IL.6"",""IL.12p40"",""IL.12p70"",""IL.18"", ""MIF"",""TNF.a"",""TNF.b"",""TRAIL"",""IL.8"",""IL.16"",""CTACK"",""Eotaxin"",""IP.10"",""IFN.a2"",""GROa"",""MCP.1"",""MCP.3"",""MIG"",""MIP.1a"", ""MIP.1b"",""RANTES"",""IL.3"",""IL.7"",  ""IL.9"",""b.NGF"",""FGF.basic"",""G.CSF"",""GM.CSF"",  ""HGF"", ""LIF"",""M.CSF"", ""PDGF.bb"", ""SCF"",""SCGF.b"", ""SDF.1a"", ""VEGF"",""IL.2Ra"", ""IL.2"",  ""IL.4"", ""IL.5"",""IL.13"",""IL.15"",""IL.17"",""IFN.g"",""IL.1ra"", ""IL.10"")"
+"0","## "

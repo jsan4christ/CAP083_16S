@@ -1,0 +1,6 @@
+"0","#The red dashed line on the graph above indicates the expected average contribution. "
+"0","#If the contribution of the variables were uniform, the expected value would be 1/length(variables) = 1/10 = 10%. For a given component, a variable with a contribution larger than this cutoff could be considered as important in contributing to the component."
+"0","# Change the gradient color"
+"0","fviz_pca_ind(dt.ps1.cyto.pca, col.ind=""contrib"") +"
+"0","scale_color_gradient2(low=""white"", mid=""blue"", "
+"0","                  high=""red"", midpoint=2.5) + theme_minimal()"

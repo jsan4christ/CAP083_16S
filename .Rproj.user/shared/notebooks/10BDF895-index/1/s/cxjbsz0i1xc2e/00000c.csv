@@ -1,0 +1,4 @@
+"0","#ggplotly(gg.ps1.prevalence)"
+"0","plyr::ddply(df.ps0.prevalence, ""Phylum"", function(df1){"
+"0","  data.frame(mean_prevalence=mean(df1$Prevalence),total_abundance=sum(df1$TotalAbundance,na.rm = T),stringsAsFactors = F)"
+"0","  })"

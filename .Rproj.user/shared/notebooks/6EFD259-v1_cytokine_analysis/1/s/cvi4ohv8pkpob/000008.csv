@@ -1,0 +1,7 @@
+"0"," # stat_compare_means(aes(label = ..p.signif..), method = ""kruskal.test"")"
+"0","# No-STIs vs Cytokines (TNF.a)"
+"0","#compare_means(TNF.a ~ CSTs, dt.ps1.NoSTIs)"
+"0","p.noSTIs.TNF.a <- ggboxplot(dt.ps1.NoSTIs, x = ""sim_subCST"", y = ""TNF.a"", color = ""sim_subCST"", palette = CSTsPallete, add = ""jitter"", "
+"0","                            xlab = ""sim_subCST"") +"
+"0","  theme_light()"
+"0","p.noSTIs.TNF.a + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"

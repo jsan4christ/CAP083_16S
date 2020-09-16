@@ -1,0 +1,7 @@
+"0","  #stat_compare_means(aes(label = ..p.signif..))                  # Add global p-value"
+"0","# No-STIs vs Cytokines (IP.10)"
+"0","#compare_means(IP.10 ~ CSTs, dt.ps1.NoSTIs, method = ""kruskal.test"")"
+"0","p.noSTIs.IP.10 <- ggerrorplot(dt.ps1.NoSTIs, x = ""sim_CST"", y = ""IP.10"", color = ""sim_CST"", palette = CSTsPallete, "
+"0","                        add = ""jitter"", desc_stat = ""median_iqr"", xlab = ""sim_CST"") +"
+"0","  theme_light()"
+"0","p.noSTIs.IP.10 + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"

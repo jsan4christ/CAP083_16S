@@ -1,0 +1,7 @@
+"0","## Sequencing depth summary"
+"0","dt.ps2.v1v2v3.sample_data = cbind(as(sample_data(ps2.v1v2v3), ""data.frame""),"
+"0","                          TotalReads = sample_sums(ps2.v1v2v3)) ##Total reads is sequence depth"
+"0","gg.SeqDepth = ggplot(dt.ps2.v1v2v3.sample_data, aes(TotalReads)) + geom_histogram() + ggtitle(""Sequencing Depth"")"
+"0","ggplotly(gg.SeqDepth)"
+"2","`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+"

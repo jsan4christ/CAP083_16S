@@ -1,0 +1,5 @@
+"0","# STIs vs Cytokines (IL.1a)"
+"0","#compare_means(IL.1a ~ CSTs, dt.ps1.STIs)"
+"0","p.STIs.IL.1a <- ggboxplot(dt.ps1.STIs, x = ""sim_CST"", y = ""IL.1a"", color = ""sim_CST"", palette = CSTsPallete, add = ""jitter"") +"
+"0","  theme_light()"
+"0","p.STIs.IL.1a + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"

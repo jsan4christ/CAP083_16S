@@ -1,0 +1,611 @@
+---
+title: "All Cytokine Analysis"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r import-and-preprocess-data}
+library(phyloseq)
+library(corrplot)
+library(dplyr)
+library(stringi)
+library(FactoMineR)
+
+## Cytokines
+allCytokineColnames <- c("b.NGF","CTACK","Eotaxin","FGF.basic","G.CSF","GM.CSF", "GROa", "HGF","IFN.a2", "IFN.g","IL.10","IL.12p70","IL.12p40","IL.13","IL.15","IL.16","IL.17","IL.18","IL.1a","IL.1b", "IL.1ra", "IL.2", "IL.2Ra", "IL.3", "IL.4", "IL.5", "IL.6", "IL.7", "IL.8", "IL.9","IP.10","LIF","M.CSF","MCP.1","MCP.3","MIF","MIG","MIP.1a", "MIP.1b", "PDGF.bb","RANTES", "SCF","SCGF.b", "SDF.1a", "TNF.a","TNF.b","TRAIL","VEGF")
+
+CSTsPallete <- c("#7CAE00", "#00BFC4", "#C77CFF",  "#F8766D", "#6699CC")
+
+ps2.v1v2v3.cst.glom.species.ra <- readRDS("processed/ps2.v1v2v3.cst.glom.species.ra.RDS")
+
+
+V1_otu_tab_cyt <- data.frame(otu_table(ps2.v1v2v3.cst.glom.species.ra))
+V1_otu_tab1_cyt <- as.data.frame(t(V1_otu_tab_cyt))
+V1_otu_tab1_cyt$OTU <- rownames(V1_otu_tab1_cyt)
+
+V1_tax_tab_cyt <- data.frame(tax_table(ps2.v1v2v3.cst.glom.species.ra))
+V1_tax_tab_cyt$OTU <- rownames(V1_tax_tab_cyt)
+
+dataWSpecies_cyt <- inner_join(V1_otu_tab1_cyt, V1_tax_tab_cyt[, c("OTU", "Species")], by = "OTU")
+
+rownames(dataWSpecies_cyt) <- dataWSpecies_cyt$Species
+
+drop <- c("OTU", "Species")
+dataWSpecies_cyt = dataWSpecies_cyt[,!(names(dataWSpecies_cyt) %in% drop)]
+t.dataWSpecies_cyt <- t(dataWSpecies_cyt)
+#View(t.dataWSpecies)
+
+corrData_cyt <- data.frame(sample_data(ps2.v1v2v3.cst.glom.species.ra))
+
+
+##Plot cytokines with bacteria
+
+## PCA plot - all cytoekies
+allCytokines <- corrData_cyt[, allCytokineColnames]
+
+# Reformat species column names so they are easier to follow
+SpeciesColNames <- colnames(t.dataWSpecies_cyt)
+SpeciesColNamesSplit <- t(data.frame(stri_split_fixed(str = SpeciesColNames, pattern = " ", n = 2)))
+SpeciesColNamesFmt <- paste0(substr(SpeciesColNamesSplit[, 1], 1,1),". ", SpeciesColNamesSplit[, 2])
+colnames(t.dataWSpecies_cyt) <-  SpeciesColNamesFmt
+
+
+cyto.all_cyt <- cbind(t.dataWSpecies_cyt , allCytokines)
+cyto.all.pca_cyt <- PCA(scale(cyto.all_cyt, center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+cex.before <- par("cex")
+par(cex = 0.7)
+corrplot::corrplot(cor(t.dataWSpecies_cyt , allCytokines), type="full", 
+         p.mat = cyto.all.pca_cyt$P, sig.level = 0.001, insig = "blank", number.font = 4)
+
+##Extract PC1
+pcs_samples_cyt <- data.frame(cyto.all.pca_cyt$ind$coord)
+
+ps2.v1v2v3.cst.glom.species.ra.sd <- data.frame(sample_data(ps2.v1v2v3.cst.glom.species.ra))[, c("SampleID","ParticipantID", "CSTs", "Trichomoniasis", "Gonorrhoea", "Chlamydia", "HSV.2", "STI", "Inflammation", "PSA", "bvscat")]
+
+pca_data_ct <- cbind(ps2.v1v2v3.cst.glom.species.ra.sd, cyto.all_cyt, PC1 = pcs_samples_cyt$Dim.1,  PC2 = pcs_samples_cyt$Dim.2)
+#View(pca_data_ct)
+```
+
+## Cytokines vs CSTs
+
+### Cytokines vs CSTs among all
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggpubr)
+
+symnum.args <- list(cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), symbols = c("****", "***", "**", "*", "ns"))
+
+#Set up comparisons
+my_comparisons <- list( c("CST1", "CST2"), c("CST1", "CST3"), c("CST1", "CST4"), c("CST2", "CST3"), c("CST2", "CST4"), c("CST3", "CST4")) 
+
+
+## color palletes
+visitsPallet <- c("lightskyblue4", "red", "lightskyblue")
+
+#Function to plot cytokins
+massPlotCytokines <- function(cytoData, cytoList, comparisons){
+  for(cytokine in cytoList){
+    print(ggboxplot(cytoData, x = "CSTs", y = cytokine, color = "CSTs", palette = CSTsPallete, add = "jitter") +
+    xlab("CSTs")  +
+    theme(axis.text.x = element_text(size = 16, face = "bold"),
+        axis.text.y = element_text(size = 16, face = "bold"),
+        legend.text = element_text(size = 16),
+        legend.title = element_text(size = 18),
+        axis.title.y = element_text(size = 20, face = "bold"),
+        axis.title.x = element_text(size = 20, face = "bold")) +
+    stat_compare_means(aes(label = ..p.signif..), comparisons = comparisons,  size = 6, fontface = "bold") #+ 
+    #stat_compare_means(aes(label = ..p.signif..), method = "kruskal.test")
+    )
+  }
+}
+
+pca_data_ct$visit <- as.numeric(substr(pca_data_ct$SampleID, 7,7))
+baseline_pca_data_ct <- pca_data_ct[pca_data_ct$visit == 1, ]
+
+table(sample_data(ps2.v1.cst.glom.species.ra)$CSTs)
+sd <- sample_data(ps2.v1.cst.glom.species.ra)
+sdvi <- data.frame(sd[sd$VisitCode == 1000])
+
+
+baseline_pca_data_ct$CSTs <- sdvi[which(sdvi$SampleID  %in%  baseline_pca_data_ct$SampleID), "CSTs"] 
+table(baseline_pca_data_ct$CSTs)
+
+massPlotCytokines(baseline_pca_data_ct, allCytokineColnames, my_comparisons)
+
+```
+
+### Cytokines vs CSTs among those who are STI positive
+
+```{r}
+
+dt.ps1.STIs <- pca_data_ct %>% dplyr::select(everything()) %>% filter(STI == 1)
+#any(dt.ps1.STIs$STI == 0) #Confirm no negatives
+
+massPlotCytokines(dt.ps1.STIs, allCytokineColnames, my_comparisons)
+```
+
+
+### Cytokines vs CSTs among those who are STI Negative
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+## Subset samples with no STI (any)
+dt.ps1.NoSTIs <- pca_data_ct %>% dplyr::select(everything()) %>% filter(STI == 0)
+#any(dt.ps1.NoSTIs$STI == 1) #confirm that no samples with STIs are in the dataset still
+
+massPlotCytokines(dt.ps1.NoSTIs, allCytokineColnames, my_comparisons)
+
+```
+
+### Cytokines vs BV Status
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+pca_data_ct$bvstatus <- ifelse(pca_data_ct$bvscat %in% "Negative", "Negative", "Positive")
+
+massPlotCytokines1 <- function(cytoData, cytoList, comparisons){
+  for(cytokine in cytoList){
+    
+  print(ggboxplot(cytoData, x = "bvstatus", y = cytokine, color = "bvstatus", palette = "jco", add = "jitter") +
+    xlab("bv status")  +
+    theme_light() +
+    stat_compare_means(aes(label = ..p.signif..)) #+ 
+    #stat_compare_means(aes(label = ..p.signif..), method = "kruskal.test")
+    )
+  }
+}
+
+massPlotCytokines1(pca_data_ct, allCytokineColnames, my_comparisons)
+
+```
+
+### Cytokine level changes accross visits
+
+```{R}
+my_comparisons <- list( c("1000", "1020"), c("1020", "1030"), c("1000","1030"))
+
+ps2.v1v2v3.f <- readRDS("processed/ps2.v1v2v3.cst.glom.species.ra.RDS")
+ps2.v1v2v3.sd <- data.frame(sample_data(ps2.v1v2v3.f))
+ps2.v1v2v3.sd <- ps2.v1v2v3.sd[!ps2.v1v2v3.sd$ParticipantID %in% c(120117, 120016, 120060, 120221, 120229, 120223, 120010), ]
+
+## All cytokines regardless of BV status
+massPlotCytokines2 <- function(sd, cytoList, comparisons){
+  for(cytokine in cytoList){
+    plot_ <- (ggpaired(sd, x = "VisitCode", y = cytokine, color = "VisitCode", line.color = "gray", line.size = 0.4, palette = visitsPallet, id = "ParticipantID", width = 0.1) +
+            scale_x_discrete(breaks=c(1000, 1020, 1030), labels=c("Baseline", "Visit 2", "Visit 3")) +
+            scale_color_discrete(name = "Clinical Visits", labels = c("Baseline", "Visit 2", "Visit 3")) +
+            theme_light() +
+            ylab(paste("sample", cytokine, "Cytokine Levels")) +
+            xlab("Clinical Visits") +
+            theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank()) +
+            stat_compare_means(paired = TRUE, comparisons = comparisons))
+  print(plot_)
+  }
+}
+massPlotCytokines2(ps2.v1v2v3.sd, allCytokineColnames, my_comparisons)
+
+```
+
+### Cytokine level changes accross visits in participants with BV
+```{r}
+
+ps2.v1v2v3.sd$bvstatus <- ifelse(ps2.v1v2v3.sd$bvscat %in% "Negative", "Negative", "Positive")
+
+ps2.v1v2v3.sd_bv <- subset(ps2.v1v2v3.sd, ps2.v1v2v3.sd$bvstatus == "Negative")
+massPlotCytokines2(ps2.v1v2v3.sd_bv , allCytokineColnames, my_comparisons)
+
+```
+
+### Cytokines BV cleared (Pre vs Post)
+```{r}
+ps2.v1.sd <- subset(ps2.v1v2v3.sd, ps2.v1v2v3.sd$VisitCode == 1000)
+ps2.v1.sd <- ps2.v1.sd[order(ps2.v1.sd$ParticipantID),]
+ps2.v2.sd <- subset(ps2.v1v2v3.sd, ps2.v1v2v3.sd$VisitCode == 1020)
+ps2.v2.sd <- ps2.v2.sd[order(ps2.v2.sd$ParticipantID),]
+ps2.v2.sd.names <- names(ps2.v2.sd)
+names(ps2.v2.sd) <- paste0(ps2.v2.sd.names, 2)
+
+ps2.v1v2.sd.wide <- cbind(ps2.v1.sd, ps2.v2.sd)
+ps2.v1v2.sd.wide$bv.cleared2 <- NULL
+
+ps2.v1v2.sd.wide <- subset(ps2.v1v2.sd.wide, ((ps2.v1v2.sd.wide$bvscat == "Intermediate" | ps2.v1v2.sd.wide$bvscat == "BV") & ps2.v1v2.sd.wide$bvscat2 == "Negative"))
+
+bv.cleared.ids <- ps2.v1v2.sd.wide$ParticipantID
+
+ps2.v1v2v3.sd.cleared <- subset(ps2.v1v2v3.sd, (ps2.v1v2v3.sd$ParticipantID %in% bv.cleared.ids & ps2.v1v2v3.sd$VisitCode %in% c(1000, 1020)))
+my_comparisons2 <- c(1000,1020)
+
+# https://www.r-bloggers.com/graphs-in-r-overlaying-data-summaries-in-dotplots/
+## define custom median function
+plot.median <- function(x) {
+  m <- median(x)
+  c(y = m, ymin = m, ymax = m)
+}
+massPlotCytokines3 <- function(sd , cytoList, comparisons){
+  for (cytokine in cytoList) {
+        plot_ <- (ggplot(sd, aes_string(x="VisitCode", y=cytokine)) + 
+          geom_dotplot(binaxis='y', stackdir='center',
+          stackratio=1.5, dotsize=1))
+  
+        print(plot_ + 
+                stat_compare_means(paired =  FALSE, method = "wilcox.test", comparisons = comparisons) +
+                stat_summary(fun.data = "plot.median", geom="errorbar", width=0.5, size=1, color="red")
+                )
+      }
+}
+
+massPlotCytokines3(ps2.v1v2v3.sd.cleared, allCytokineColnames, my_comparisons2)
+```
+### With significance
+```{r}
+my_comparisons2 <- c(1000, 1020)
+massPlotCytokines4 <- function(sd, cytoList, comparisons){
+  for (cytokine in cytoList) {
+        plot_ <- (ggviolin(sd, x="VisitCode", y=cytokine, fill = "VisitCode",
+                           palette = c("#00AFBB", "#E7B800"),
+         add = "boxplot", add.params = list(fill = "white")) +
+                theme_minimal()
+        )
+  
+        print(plot_ +
+                stat_compare_means( aes(label = ..p.signif..)
+                        )
+                )
+      }
+}
+
+massPlotCytokines4(ps2.v1v2v3.sd.cleared, allCytokineColnames, my_comparisons2)
+
+```
+
+
+### Multivariate Analysis
+
+First we look at cytokine levels between visits. Then between BV and non-BV and then we begin to add interactions.
+```{r}
+## Test for normalcy
+#Create 2x2 plot environment 
+par(mfrow = c(2, 2))
+
+#Plots
+hist(ps2.v1v2v3.sd$G.CSF, main="GCSF", xlab="", breaks=10)
+hist(ps2.v1v2v3.sd$IL.1a, main="IL-1a", xlab="", breaks=10)
+hist(ps2.v1v2v3.sd$IL.1b, main="IL-1b", xlab="", breaks=15)
+hist(ps2.v1v2v3.sd$M.CSF, main="MCSF", xlab="", breaks=15)
+
+shapiro.test(ps2.v1v2v3.sd$G.CSF);shapiro.test(ps2.v1v2v3.sd$IL.1a);shapiro.test(ps2.v1v2v3.sd$IL.1b);shapiro.test(ps2.v1v2v3.sd$M.CSF) # Data not normally distributed
+
+
+## Multivariate analysis, please control for Age, PSA, any STIs, BV (where not applicable), condom use
+ps2.v1v2v3.sd$bvstatus <- factor(ps2.v1v2v3.sd$bvstatus)
+ps2.v1v2v3.sd$Condom_use <- factor(ps2.v1v2v3.sd$Condom_use)
+
+
+####GCSF
+qp.GCSF = glm((G.CSF+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.GCSF, which=c(1,2))
+summary(qp.GCSF)
+ 
+qp.GCSF = glm((G.CSF+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.GCSF, which=c(1,2))
+summary(qp.GCSF)
+ 
+## Anova
+
+aov.GCSF = aov(G.CSF ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.GCSF)
+TukeyHSD(aov.GCSF)
+
+aov.GCSF = aov(G.CSF ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.GCSF)
+TukeyHSD(aov.GCSF)
+
+aov.GCSF.a = aov(G.CSF ~ VisitCode + PSA + STI, data=ps2.v1v2v3.sd)
+summary(aov.GCSF.a)
+TukeyHSD(aov.GCSF.a)
+
+## GCSF, IL-1a, IL-1b, MCSF, VEGF, GMCSF, HGF, IL-2Ra, IL-4, LIF, MIG, PDGF-bb, TNF-a, TNF-b, IL-16
+
+
+####IL.1a
+qp.IL.1a = glm((IL.1a+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.1a, which=c(1,2))
+summary(qp.IL.1a)
+ 
+qp.IL.1a = glm((IL.1a+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.1a, which=c(1,2))
+summary(qp.IL.1a)
+
+## Anova
+
+aov.IL.1a  = aov(IL.1a ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.IL.1a)
+TukeyHSD(aov.IL.1a)
+
+aov.IL.1a  = aov(IL.1a ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.IL.1a)
+TukeyHSD(aov.IL.1a)
+
+
+####IL.1b
+qp.IL.1b = glm((IL.1b+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.1b, which=c(1,2))
+summary(qp.IL.1b)
+ 
+qp.IL.1b = glm((IL.1b+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.1b, which=c(1,2))
+summary(qp.IL.1b)
+
+## Anova
+aov.IL.1b  = aov(IL.1b ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.IL.1b)
+TukeyHSD(aov.IL.1b)
+
+aov.IL.1b  = aov(IL.1b ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.IL.1b)
+TukeyHSD(aov.IL.1b)
+
+####M.CSF
+qp.M.CSF = glm((M.CSF+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.M.CSF, which=c(1,2))
+summary(qp.M.CSF)
+ 
+qp.M.CSF = glm((M.CSF+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.M.CSF, which=c(1,2))
+summary(qp.M.CSF)
+
+## Anova
+aov.M.CSF  = aov(M.CSF ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.M.CSF)
+TukeyHSD(aov.M.CSF)
+
+aov.M.CSF  = aov(M.CSF ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.M.CSF)
+TukeyHSD(aov.M.CSF)
+
+####VEGF
+qp.VEGF = glm((VEGF+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.VEGF, which=c(1,2))
+summary(qp.VEGF)
+ 
+qp.VEGF = glm((VEGF+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.VEGF, which=c(1,2))
+summary(qp.VEGF)
+
+## Anova
+aov.VEGF  = aov(VEGF ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.VEGF)
+TukeyHSD(aov.VEGF)
+
+aov.VEGF  = aov(VEGF ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.VEGF)
+TukeyHSD(aov.VEGF)
+
+####GMCSF
+qp.GM.CSF = glm((GM.CSF+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.GM.CSF, which=c(1,2))
+summary(qp.GM.CSF)
+ 
+qp.GM.CSF = glm((GM.CSF+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.GM.CSF, which=c(1,2))
+summary(qp.GM.CSF)
+
+## Anova
+aov.GM.CSF  = aov(GM.CSF ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.GM.CSF)
+TukeyHSD(aov.GM.CSF)
+
+aov.GM.CSF  = aov(GM.CSF ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.GM.CSF)
+TukeyHSD(aov.GM.CSF)
+
+
+####HGF
+qp.HGF = glm((HGF+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.HGF, which=c(1,2))
+summary(qp.HGF)
+ 
+qp.HGF = glm((HGF+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.HGF, which=c(1,2))
+summary(qp.HGF)
+
+## Anova
+aov.HGF  = aov(HGF ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.HGF)
+TukeyHSD(aov.HGF)
+
+aov.HGF  = aov(HGF ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.HGF)
+TukeyHSD(aov.HGF)
+
+####IL-2Ra
+qp.IL.2Ra = glm((IL.2Ra+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.2Ra, which=c(1,2))
+summary(qp.IL.2Ra)
+ 
+qp.IL.2Ra = glm((IL.2Ra+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.2Ra, which=c(1,2))
+summary(qp.IL.2Ra)
+
+## Anova
+aov.IL.2Ra  = aov(IL.2Ra ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.IL.2Ra)
+TukeyHSD(aov.IL.2Ra)
+
+
+aov.IL.2Ra  = aov(IL.2Ra ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.IL.2Ra)
+TukeyHSD(aov.IL.2Ra)
+
+
+####IL-4
+qp.IL.4 = glm((IL.4+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.4, which=c(1,2))
+summary(qp.IL.4)
+ 
+qp.IL.4 = glm((IL.4+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.4, which=c(1,2))
+summary(qp.IL.4)
+
+## Anova
+aov.IL.4  = aov(IL.4 ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.IL.4)
+TukeyHSD(aov.IL.4)
+
+
+aov.IL.4  = aov(IL.4 ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.IL.4)
+TukeyHSD(aov.IL.4)
+
+
+####LIF
+qp.LIF = glm((LIF+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.LIF, which=c(1,2))
+summary(qp.LIF)
+ 
+qp.LIF = glm((LIF+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.LIF, which=c(1,2))
+summary(qp.LIF)
+
+## Anova
+aov.LIF  = aov(LIF ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.LIF)
+TukeyHSD(aov.LIF)
+
+aov.LIF  = aov(LIF ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.LIF)
+TukeyHSD(aov.LIF)
+
+
+####MIG
+qp.MIG = glm((MIG+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.MIG, which=c(1,2))
+summary(qp.MIG)
+ 
+qp.MIG = glm((MIG+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.MIG, which=c(1,2))
+summary(qp.MIG)
+
+## Anova
+aov.MIG  = aov(MIG ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.MIG)
+TukeyHSD(aov.MIG)
+
+aov.MIG  = aov(MIG ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.MIG)
+TukeyHSD(aov.MIG)
+
+####PDGF-bb
+qp.PDGF.bb = glm((PDGF.bb+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.PDGF.bb, which=c(1,2))
+summary(qp.PDGF.bb)
+ 
+qp.MIG = glm((PDGF.bb+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.PDGF.bb, which=c(1,2))
+summary(qp.PDGF.bb)
+
+## Anova
+aov.PDGF.bb  = aov(PDGF.bb ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.PDGF.bb)
+TukeyHSD(aov.PDGF.bb)
+
+aov.PDGF.bb  = aov(PDGF.bb ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.PDGF.bb)
+TukeyHSD(aov.PDGF.bb)
+
+
+####TNF-a
+qp.TNF.a = glm((TNF.a+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.TNF.a, which=c(1,2))
+summary(qp.TNF.a)
+ 
+qp.TNF.a = glm((TNF.a+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.TNF.a, which=c(1,2))
+summary(qp.TNF.a)
+
+## Anova
+aov.TNF.a  = aov(TNF.a ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.TNF.a)
+TukeyHSD(aov.TNF.a)
+
+aov.TNF.a  = aov(TNF.a ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.TNF.a)
+TukeyHSD(aov.TNF.a)
+
+
+####TNF-b
+qp.TNF.b = glm((TNF.b+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.TNF.b, which=c(1,2))
+summary(qp.TNF.b)
+ 
+qp.TNF.b = glm((TNF.b+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.TNF.b, which=c(1,2))
+summary(qp.TNF.b)
+
+## Anova
+aov.TNF.b  = aov(TNF.b ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.TNF.b)
+TukeyHSD(aov.TNF.b)
+
+aov.TNF.b  = aov(TNF.b ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.TNF.b)
+TukeyHSD(aov.TNF.b)
+
+
+####IL-16
+qp.IL.16 = glm((IL.16+10) ~ VisitCode, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.16, which=c(1,2))
+summary(qp.IL.16)
+ 
+qp.IL.16 = glm((IL.16+10) ~ VisitCode + PSA + STI + bvstatus + Condom_use + VisitCode:bvstatus + VisitCode:STI, data=ps2.v1v2v3.sd, family="quasipoisson")
+par(mfrow = c(1,2))
+plot(qp.IL.16, which=c(1,2))
+summary(qp.IL.16)
+
+## Anova
+aov.IL.16  = aov(IL.16 ~ VisitCode, data=ps2.v1v2v3.sd)
+summary(aov.IL.16)
+TukeyHSD(aov.IL.16)
+
+aov.IL.16  = aov(IL.16 ~ VisitCode + PSA + STI + bvstatus + Condom_use, data=ps2.v1v2v3.sd)
+summary(aov.IL.16)
+TukeyHSD(aov.IL.16)
+
+
+
+
+```
+

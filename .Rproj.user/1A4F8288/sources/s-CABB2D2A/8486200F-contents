@@ -1,0 +1,191 @@
+# Data Cleaning and Preprocessing
+
+## Filter out taxa without Phylum
+
+Taxa without assignment at the Phylumn level are likely spurious and will not be relevant in the downstream analyses so dropping those. In this case we filter out the 'NA's and ""s.
+```{r taxa-without-phylum-level-assignment, echo=TRUE}
+
+#Phylum in our data and sample counts at these phylum. Notice <NA>, samples not assigned to any phylum. We remove these
+get_taxa_unique(ps0, "Phylum")
+
+#Determine taxa without Phylum assignment
+cat("Taxa distribution by Phylum")
+table(tax_table(ps0)[, "Phylum", exclude = NULL])
+ps0.Phylum <- subset_taxa(ps0, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized"))
+table(tax_table(ps0.Phylum)[, "Phylum"], exclude = NULL)
+
+# Remove taxa that is not present in any sample (keep only those assigned at least one sample)
+
+# summary(taxa_sums(ps0.Phylum))
+ps0.Phylum <- prune_taxa(taxa_sums(ps0.Phylum) > 0, ps0.Phylum)
+
+cat("\nTaxa Summary after filtering out 0 read count taxa\n")
+summary(taxa_sums(ps0.Phylum))
+
+# How many Phylum would be present after filtering?
+cat("\nNumber of unique pylum remaining after filtering:\n", length(get_taxa_unique(ps0.Phylum, taxonomic.rank = "Phylum")))
+
+```
+
+
+## Filter out non-bacterial taxa
+
+Sample preparation and handling can introduce contamination (non-bacterial DNA). We need to check for and remove all this DNA from the remaining samples.
+
+```{r filter-non-bacteria, echo=TRUE}
+# Some examples of taxa you may not want to include in your analysis
+get_taxa_unique(ps0.Phylum, "Kingdom")
+get_taxa_unique(ps0.Phylum, "Phylum")
+
+ps0.Phylum # Check the number of taxa prior to removal
+ps0.phylum.bact <- ps0.Phylum %>%
+  subset_taxa(
+    Kingdom == "Bacteria" &
+    Family  != "mitochondria" &
+    Class   != "Chloroplast" & 
+    Phylum != "Cyanobacteria"
+  )
+ps0.phylum.bact # Confirm that the taxa were removed
+get_taxa_unique(ps0.phylum.bact, "Kingdom")
+get_taxa_unique(ps0.phylum.bact, "Class")
+```
+
+
+
+## Data summary and assessment
+
+With our data now clean, we can perform an evaluation of what remains;
+
+1) Evaluate Amplicon Sequence Variants (ASV) summary statistics
+2) Detect and remove outlier samples
+3) Prevalence estimation and filtering
+
+*Step 1: Evaluate Amplicon Sequence Variants (ASV) summary statistics*
+ASV summary plots.
+
+```{r data-assessment, echo=TRUE}
+# Create a new data frame of the sorted row sums, a column of sorted values from 1 to the total number of individuals/counts for each ASV and a categorical variable stating these are all ASVs.
+df.readsums <- data.frame(nreads = sort(taxa_sums(ps0.phylum.bact), decreasing = TRUE), 
+                        sorted = 1:ntaxa(ps0.phylum.bact),
+                        type = "ASVs")
+#head(df.readsums)
+
+# Make a data frame with a column for the read counts of each sample for histogram production
+df.sample_sums <- data.frame(sum = sample_sums(ps0.phylum.bact)) #read counts for each sample
+
+#df.both.sums <- data.frame(nreads = taxa_sums(ps0.phylum.bact) , asvs = sample_sums(ps0.phylum.bact) )
+
+
+# Make plots
+# Generates a bar plot with # of reads (y-axis) for each taxa. Sorted from most to least abundant
+# Generates a second bar plot with # of reads (y-axis) per sample. Sorted from most to least
+gg.reads = ggplot(df.readsums, aes(x = sorted, y = nreads)) +
+  geom_bar(stat = "identity") +
+  ggtitle("No. of Sequences Per ASV Assessment") +
+  scale_y_log10() +
+  facet_wrap(~type, scales = "free") +
+  ylab("# of Sequences") +
+  xlab("Taxa (sorted by sequence counts)")
+
+# Histogram of the number of Samples (y-axis) at various read depths
+gg.reads.hist <- ggplot(df.sample_sums, aes(x = sum)) + 
+  geom_histogram(color = "blue", fill = "firebrick3", binwidth = 150) +
+  ggtitle("Distribution of sample sequencing depth") + 
+  xlab("Read counts") +
+  ylab("# of Samples")
+
+# Final plot, side-by-side
+grid.arrange(gg.reads, gg.reads.hist, ncol = 1) #in package gridExtra
+
+```
+
+View number of sequences per taxa (left plot). Highest value is over 100000, but this just for one taxa. Number reduce as the number of taxa increase. On the right, number of 
+
+*Step 2: Detect and remove outliers*
+
+When questionable samples arise you should take note of them so if there are samples which behave oddly in downstream analysis you can recall this information and perhaps justify their removal. 
+
+```{r sample-outlier-removal, echo=TRUE}
+cat("No. of samples before dropping outliers: \n", nsamples(ps0.phylum.bact), "\n")
+#1202551 - Extreamly large number of reads (1970388) which are likely erroneous. Excluding from further analyses.
+#1202273 - Sample does not have cytokine data, results in char objects
+#120039  - Did not have visit1
+#dropSamples <- c("120255_S17", "120227-1000_S58", "120227-1020_S76", "120227-1030_S59", "120039_S38", "120039-1020_S20", "120039-1030_S7")
+#ps0.phylum.bact <- prune_samples(!sample_names(ps0.phylum.bact) %in% dropSamples,  ps0.phylum.bact)
+
+#cat("No. of samples remaining after dropping: \n", nsamples(ps0.phylum.bact), "\n")
+
+#Check to see whether there are taxa nolonger assigned to any sample after cleaning and remove
+#any(taxa_sums(ps0.phylum.bact) <= 0)
+
+##Drop chaotic and unnecessary strain column
+tax_table(ps0.phylum.bact) <- tax_table(ps0.phylum.bact)[,1:7]
+ps0.phylum.bact <- prune_taxa(taxa_sums(ps0.phylum.bact) > 0, ps0.phylum.bact)
+```
+
+## Create or reorder factors
+
+Create factor variables for downstream analyses
+```{r echo=TRUE}
+
+cat("Reorder BV score levels such that negative comes first.\n")
+levels(sample_data(ps0.phylum.bact)$bvscat)
+sample_data(ps0.phylum.bact)$bvscat <- factor(sample_data(ps0.phylum.bact)$bvscat, levels = c("Negative" , "Intermediate", "BV"))
+levels(sample_data(ps0.phylum.bact)$bvscat)
+
+#Create/convert STD information to factor
+sample_data(ps0.phylum.bact)$STI <- as.factor(sample_data(ps0.phylum.bact)$STI)
+sample_data(ps0.phylum.bact)$Inflammation <- as.factor(sample_data(ps0.phylum.bact)$Inflammation)
+sample_data(ps0.phylum.bact)$Chlamydia <- as.factor(sample_data(ps0.phylum.bact)$Chlamydia)
+sample_data(ps0.phylum.bact)$Gonorrhoea <- as.factor(sample_data(ps0.phylum.bact)$Gonorrhoea)
+sample_data(ps0.phylum.bact)$Trichomoniasis <- as.factor(sample_data(ps0.phylum.bact)$Trichomoniasis)
+sample_data(ps0.phylum.bact)$Candidiasis <- as.factor(sample_data(ps0.phylum.bact)$Candidiasis)
+sample_data(ps0.phylum.bact)$PSA <- as.factor(sample_data(ps0.phylum.bact)$PSA)
+sample_data(ps0.phylum.bact)$`HSV.1` <- as.factor(sample_data(ps0.phylum.bact)$`HSV.1`)
+sample_data(ps0.phylum.bact)$`HSV.2` <- as.factor(sample_data(ps0.phylum.bact)$`HSV.2`)
+sample_data(ps0.phylum.bact)$sim_CST <- as.factor(sample_data(ps0.phylum.bact)$sim_CST,  levels = )
+sample_data(ps0.phylum.bact)$sim_subCST <- as.factor(sample_data(ps0.phylum.bact)$sim_subCST)
+
+```
+Perform prevalence filtering in final dataset
+
+```{r echo=TRUE}
+
+PlotPrevalence(ps0.phylum.bact, 0.05)
+ps0.phylum.bact.f <- ps0.phylum.bact
+  
+PhylumToDrop <- c("Planctomycetes", "Chloroflexi", "SRI", "Verrucomicrobia", "Lentisphaerae")
+#SpeciesToDrop <- c("Peptoniphilus harei")
+#ps2.v1v2v3.f <- subset_taxa(ps2.v1v2v3.f, !(Phylum %in% PhylumToDrop | Species %in% SpeciesToDrop))
+ps0.phylum.bact.f <- subset_taxa(ps0.phylum.bact.f, !Phylum %in% PhylumToDrop)
+#get_taxa_unique(ps2.v1v2v3.f, "Species")
+
+ps0.phylum.bact.f <- FilterByPrevalence(ps0.phylum.bact.f, prevalence = 0.05)
+
+PlotPrevalence(ps0.phylum.bact.f, 0.05)
+#save(ps0.phylum.bact.f, file = "/temp/16S/modifyTaxTable/ps0.phylum.bact.f.RData")
+```
+
+
+
+
+## Rarefaction plots to evaluate depth of sequencing 
+
+Are most samples sequenced to saturation?
+
+```{r data-summaries} 
+
+ ## Read counts per sample 
+ #sample.data <- data.table(as(sample_data(ps0.phylum.bact), "data.frame"), TotalReads = sample_sums(ps0.phylum.bact)) 
+ #sample.data$SampleNo <- seq_along(1:nrow(sample.data))
+
+ ## Save read counts to excel 
+ #writexl::write_xlsx(sample.data[, c("SeqName", "TotalReads")], "results/data/ReadCountsPerSampleR2.xlsx") 
+
+ ## Rarefaction curve 
+  #ps2 <- prune_samples(sample_sums(ps0.phylum.bact) > 0, ps0.phylum.bact) ##Drop samples with 0 reads, 
+  #ggrare(ps2, color = "bvscat", label = "SampleNo", se = FALSE) +  
+   #facet_wrap(~VisitCode) + 
+   #ggtitle("Rarefaction of Curve Showing Saturation of ASVs") 
+
+``` 

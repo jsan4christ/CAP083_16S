@@ -1,0 +1,4 @@
+"0","#cst_annotated_heatmap(ps2.v3.cst.glom.Species.ra)"
+"0","#require(ggpubr)"
+"0","#plotlist <- lapply(list(ps2.v1.cst.glom.Species.ra, ps2.v2.cst.glom.Species.ra, ps2.v3.cst.glom.Species.ra), cst_annotated_heatmap)"
+"0","#ggarrange(plotlist=plotlist, ncol=2,nrow=2)"

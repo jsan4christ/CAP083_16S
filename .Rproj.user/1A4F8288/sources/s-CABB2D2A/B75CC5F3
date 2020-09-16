@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1600255156783.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "632283471",
+    "id" : "B75CC5F3",
+    "lastKnownWriteTime" : 1600261885,
+    "last_content_update" : 1600261885194,
+    "path" : "~/temp/Data_Analysis/Andile/CAP083_16S/./alpha_n_beta_div.Rmd",
+    "project_path" : "./alpha_n_beta_div.Rmd",
+    "properties" : {
+        "cursorPosition" : "352,99",
+        "scrollLine" : "335"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

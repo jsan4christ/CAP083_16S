@@ -1,0 +1,155 @@
+```{r initiate-environment-cytokines-heatmap, warning=FALSE, include=FALSE}
+# Set up required packages
+.cran_packages <- c("gplots", "reshape2", "plyr", "dendextend")
+.bioc_packages <- c()
+
+.inst <- .cran_packages %in% installed.packages()
+if(any(!.inst)) {
+  install.packages(.cran_packages[!.inst])
+}
+.inst <- .bioc_packages %in% installed.packages()
+if(any(!.inst)) {
+  source("http://bioconductor.org/biocLite.R")
+  biocLite(.bioc_packages[!.inst], ask = F)
+}
+# Load packages into session, and print package version
+sapply(c(.cran_packages, .bioc_packages), require, character.only = TRUE)
+
+```
+
+Cytokine Heatmaps
+
+```{r heatmap-melis, echo=FALSE}
+
+##########Melis guide#####
+
+dt.ps1.sampledata.melis <- data.frame(sample_data(ps1.v1.cst.glom.Species.ra.top25))
+dt.ps1.cyto.melis <- dt.ps1.v1.cst.sample_data[c(allCytokineColnames,"PC1")] #subset cytokines and PC1 columns
+dt.ps1.cyto.melis <- apply(dt.ps1.cyto.melis, 2, as.numeric)
+
+dt.ps1.cyto.melis.scale <- scale(dt.ps1.cyto.melis[, -ncol(dt.ps1.cyto.melis)])
+dt.ps1.cyto.melis.scale <- cbind(dt.ps1.cyto.melis.scale, PC1 = dt.ps1.cyto.melis[, ncol(dt.ps1.cyto.melis)])
+
+# Add PC1 column to sample data for sorting
+dt.ps1.sampledata.melis$PC1 <- dt.ps1.cyto.melis.scale[, "PC1"]
+ 
+#Sort cytokines by PC1
+hclust2 <- function(x,method="complete")  hclust (x, method="complete")
+dist2 <- function(x,method="manhattan")  dist (x, method="manhattan")
+dt.ps1.cyto.melis.scale.t <- t(dt.ps1.cyto.melis.scale)
+
+
+## Get BV, STI and inflammation data
+# BV
+BV <- as.vector(dt.ps1.sampledata.melis$bvscat)
+BV <- replace(BV, which(BV == "BV"),"purple")
+BV <- replace(BV, which(BV == "Intermediate"),"mistyrose1")
+BV <- replace(BV, which(BV == "Negative"),"gray79")
+
+#Inflammation
+Infln <- as.vector(dt.ps1.sampledata.melis$Inflammation)
+Infln <- replace(Infln, which(Infln == 0),"gray")
+Infln <- replace(Infln, which(Infln == 1),"dodgerblue2")
+
+#STI
+STI <- as.vector(dt.ps1.sampledata.melis$STI)
+STI <- replace(STI, which(STI == 0),"gray")
+STI <- replace(STI, which(STI == 1),"dodgerblue2")
+
+#Gonorrhea
+gono <- as.vector(dt.ps1.sampledata.melis$Gonorrhoea)
+gono <- replace(gono, which(gono == 0),"gray")
+gono <- replace(gono, which(gono == 1),"dodgerblue2")
+
+#Trichomoniasis
+tric <- as.vector(dt.ps1.sampledata.melis$Trichomoniasis)
+tric <- replace(tric, which(tric == 0),"gray")
+tric <- replace(tric, which(tric == 1),"dodgerblue2")
+
+#Chlamydia
+chl <- as.vector(dt.ps1.sampledata.melis$Chlamydia)
+chl <- replace(chl, which(chl == 0),"gray")
+chl <- replace(chl, which(chl == 1),"dodgerblue2")
+
+#HSV2
+hsv2 <- as.vector(dt.ps1.sampledata.melis$HSV.2)
+hsv2 <- replace(hsv2, which(hsv2 == 0),"gray")
+hsv2 <- replace(hsv2, which(hsv2 == 1),"dodgerblue2")
+
+#Candidiasis
+cand <- as.vector(dt.ps1.sampledata.melis$Candidiasis)
+cand <- replace(cand, which(cand == 0),"gray")
+cand <- replace(cand, which(cand == 1),"dodgerblue2")
+
+
+
+
+# creates a own color palette from red to green
+my_palette <- colorRampPalette(c("forestgreen", "yellow", "deeppink3"))(n = 119)
+
+# (optional) defines the color breaks manually for a "skewed" color transition
+col_breaks = c(seq(-3,0.0,length=30),  # for green
+               seq(0.1,1.0,length=30),              # for yellow
+               seq(1.1,3,length=60))              # for red
+
+###Print them all out
+myAnnotColmns <- c("Inflammation", "STI", "Gonorrhoea", "Trichomoniasis", "Chlamydia", "HSV.2", "Candidiasis")
+
+plotHeatmaps <- function(dataFr, dataFr2, annotColmns){
+   require(gplots)
+   for(i in c(1:length(annotColmns))){
+    colName <- annotColmns[i]
+    #Define color vector
+    colVec <- as.vector(dataFr2[, colName])
+    colVec <- replace(colVec, which(colVec == 0),"gray")
+    colVec <- replace(colVec, which(colVec == 1),"dodgerblue2")
+    
+    #Generate heatmaps
+    heatmap.2(dataFr,
+          main = paste0("Heatmap with ", colName, " annotation"),
+          hclustfun = hclust2,
+          distfun=dist2,
+          trace="none",         # turns off trace lines inside the heat map
+          col=my_palette,       # use on color palette defined earlier
+          breaks=col_breaks,    # enable color transition at specified limits
+          sepcolor="gray70",    # determines the separation color
+          colsep=0:ncol(dataFr), # determines where column separators go
+          rowsep=0:nrow(dataFr), # determines where row separators go
+          sepwidth=c(0.01,0.01), # determines the width of the separators
+          density.info="none", # turns off density plot inside color legend
+          keysize = 1.5,
+          labCol = FALSE, #remove column names
+          ColSideColors=colVec,
+          key = T
+    )  
+   }
+}
+
+## Plot cytokine heatmaps of all Cytokines
+plotHeatmaps(dt.ps1.cyto.melis.scale.t, dt.ps1.sampledata.melis,  myAnnotColmns)
+
+## Cytokine heatmap of proinflammatory cytokines only
+dt.ps1.ProCyto <- data.frame(sample_data(ps1.v1.cst.glom.Species.ra)[ ,proInfC])
+dt.ps1.ProCyto <- apply(dt.ps1.ProCyto, 2, as.numeric)
+
+## Scale data before PCA
+dt.ps1.ProCyto.scale <- scale(dt.ps1.ProCyto, center = TRUE, scale = TRUE)
+
+##Run PCA
+dt.ps1.ProCyto.pca <- PCA(dt.ps1.ProCyto.scale, scale.unit = FALSE, graph = FALSE) ##Library FactoMineR
+
+##Extract PC1
+ProCytoPCs <- data.frame(dt.ps1.ProCyto.pca$ind$coord)
+#head(ProCytoPCs)
+
+dt.ps1.ProCytoPC1 <- cbind(dt.ps1.ProCyto, PC1 = ProCytoPCs$Dim.1)
+
+dt.ps1.cst.sd.ProCyto <- cbind(dt.ps1.v1.cst.sample_data, PC1 = ProCytoPCs$Dim.1)
+ProCytoHeatmapData <- dt.ps1.cst.sd.ProCyto[, c("sim_CST", "Trichomoniasis", "Gonorrhoea", "Chlamydia", "HSV.2", "Candidiasis", "STI", "Inflammation", "PSA", "PC1")]
+ProCytoHeatmapData$SampleID <- rownames(ProCytoHeatmapData)
+
+dt.ps1.ProCytoPC1.t <- t(dt.ps1.ProCytoPC1)
+plotHeatmaps(dt.ps1.ProCytoPC1.t, ProCytoHeatmapData,  myAnnotColmns)
+
+```
+

@@ -1,0 +1,330 @@
+Cytokine Heatmaps - All visits
+
+```{r heatmap-melis-ext, echo=FALSE}
+
+##########Melis guide#####
+
+ps2.v1v2v3.glom.species.ra.top25 <- prune_taxa(names(sort(taxa_sums(ps2.v1v2v3.glom.species.ra), T))[1:25], ps2.v1v2v3.glom.species.ra)
+
+V1_otu_tab_cyt <- data.frame(otu_table(ps2.v1v2v3.glom.species.ra.top25))
+V1_otu_tab1_cyt <- as.data.frame(t(V1_otu_tab_cyt))
+V1_otu_tab1_cyt$OTU <- rownames(V1_otu_tab1_cyt)
+
+V1_tax_tab_cyt <- data.frame(tax_table(ps2.v1v2v3.glom.species.ra.top25))
+V1_tax_tab_cyt$OTU <- rownames(V1_tax_tab_cyt)
+
+dataWSpecies_cyt <- inner_join(V1_otu_tab1_cyt, V1_tax_tab_cyt[, c("OTU", "Species")], by = "OTU")
+
+rownames(dataWSpecies_cyt) <- dataWSpecies_cyt$Species
+
+drop <- c("OTU", "Species")
+dataWSpecies_cyt = dataWSpecies_cyt[,!(names(dataWSpecies_cyt) %in% drop)]
+t.dataWSpecies_cyt <- t(dataWSpecies_cyt)
+#View(t.dataWSpecies)
+
+corrData_cyt <- data.frame(sample_data(ps2.v1v2v3.glom.species.ra.top25))
+
+
+##Plot cytokines with bacteria
+
+## PCA plot - all cytoekies
+allCytokines <- corrData_cyt[, allCytokineColnames]
+cyto.all_cyt <- cbind(t.dataWSpecies_cyt , allCytokines)
+cyto.all.pca_cyt <- PCA(scale(cyto.all_cyt, center = TRUE, scale = TRUE), scale.unit = FALSE, graph = FALSE)
+
+cex.before <- par("cex")
+par(cex = 0.7)
+corrplot::corrplot(cor(t.dataWSpecies_cyt , allCytokines), type="full", 
+         p.mat = cyto.all.pca_cyt$P, sig.level = 0.001, insig = "blank", number.font = 4)
+
+##Extract PC1
+pcs_samples_cyt <- data.frame(cyto.all.pca_cyt$ind$coord)
+df.all.sampledata.melis <- data.frame(sample_data(ps2.v1v2v3.glom.species.ra.top25))
+df.all.sampledata.melis$PC1 <- pcs_samples_cyt$Dim.1
+df.all.cyto.melis <- df.all.sampledata.melis[c(allCytokineColnames,"PC1")] #subset cytokines and PC1 columns
+#dt.ps1.cyto.melis <- apply(dt.ps1.cyto.melis, 2, as.numeric)
+
+df.all.cyto.melis.scale <- scale(df.all.cyto.melis[, -ncol(df.all.cyto.melis)])
+df.all.cyto.melis.scale <- cbind(df.all.cyto.melis.scale, PC1 = df.all.cyto.melis[, ncol(df.all.cyto.melis)])
+
+# Add PC1 column to sample data for sorting
+df.all.sampledata.melis$PC1 <- df.all.cyto.melis.scale[, "PC1"]
+
+hclust2 <- function(x,method="complete")  hclust (x, method="complete")
+dist2 <- function(x,method="manhattan")  dist (x, method="manhattan")
+df.all.cyto.melis.scale.t <- t(df.all.cyto.melis.scale)
+
+
+## Get BV, STI and inflammation data
+# BV
+BV <- as.vector(df.all.sampledata.melis$bvscat)
+BV <- replace(BV, which(BV == "BV"),"white")
+BV <- replace(BV, which(BV == "Intermediate"),"grey60")
+BV <- replace(BV, which(BV == "Negative"),"maroon")
+
+#Inflammation
+Infln <- as.vector(df.all.sampledata.melis$Inflammation)
+Infln <- replace(Infln, which(Infln == 0),"white")
+Infln <- replace(Infln, which(Infln == 1),"maroon")
+
+#STI
+STI <- as.vector(df.all.sampledata.melis$STI)
+STI <- replace(STI, which(STI == 0),"white")
+STI <- replace(STI, which(STI == 1),"maroon")
+
+#Gonorrhea
+gono <- as.vector(df.all.sampledata.melis$Gonorrhoea)
+gono <- replace(gono, which(gono == 0),"white")
+gono <- replace(gono, which(gono == 1),"maroon")
+
+#Trichomoniasis
+tric <- as.vector(df.all.sampledata.melis$Trichomoniasis)
+tric <- replace(tric, which(tric == 0),"white")
+tric <- replace(tric, which(tric == 1),"maroon")
+
+#Chlamydia
+chl <- as.vector(df.all.sampledata.melis$Chlamydia)
+chl <- replace(chl, which(chl == 0),"white")
+chl <- replace(chl, which(chl == 1),"maroon")
+
+#HSV2
+hsv2 <- as.vector(df.all.sampledata.melis$HSV.2)
+hsv2 <- replace(hsv2, which(hsv2 == 0),"white")
+hsv2 <- replace(hsv2, which(hsv2 == 1),"maroon")
+
+#Candidiasis
+cand <- as.vector(df.all.sampledata.melis$Candidiasis)
+cand <- replace(cand, which(cand == 0),"white")
+cand <- replace(cand, which(cand == 1),"maroon")
+
+
+#CSTs
+csts <- as.vector(df.all.sampledata.melis$CSTs)
+csts <- replace(csts, which(csts == "I-A"),  CSTsPallete[1])
+csts <- replace(csts, which(csts == "I-B"),  CSTsPallete[2])
+csts <- replace(csts, which(csts == "III-A"),CSTsPallete[5])
+csts <- replace(csts, which(csts == "III-B"),CSTsPallete[6])
+csts <- replace(csts, which(csts == "IV-A"), CSTsPallete[7])
+csts <- replace(csts, which(csts == "IV-B"), CSTsPallete[8])
+csts <- replace(csts, which(csts == "IV-C0"),CSTsPallete[9])
+
+
+# creates a own color palette from red to green
+my_palette <- colorRampPalette(c("forestgreen", "yellow", "deeppink3"))(n = 119)
+
+# (optional) defines the color breaks manually for a "skewed" color transition
+col_breaks = c(seq(-3,0.0,length=30),  # for green
+               seq(0.1,1.0,length=30),              # for yellow
+               seq(1.1,3,length=60))              # for red
+
+###Print them all out
+myAnnotColmns <- c("Inflammation", "STI")
+
+plotHeatmaps <- function(dataFr, dataFr2, annotColmns){
+   require(gplots)
+   for(i in c(1:length(annotColmns))){
+    colName <- annotColmns[i]
+    #Define color vector
+    colVec <- as.vector(dataFr2[, colName])
+    colVec <- replace(colVec, which(colVec == 0),"white")
+    colVec <- replace(colVec, which(colVec == 1),"maroon")
+    
+    #Generate heatmaps
+    heatmap.2(dataFr,
+          main = paste0("Heatmap with ", colName, " annotation"),
+          hclustfun = hclust2,
+          distfun=dist2,
+          trace="none",         # turns off trace lines inside the heat map
+          col=my_palette,       # use on color palette defined earlier
+          breaks=col_breaks,    # enable color transition at specified limits
+          sepcolor="gray70",    # determines the separation color
+          colsep=0:ncol(dataFr), # determines where column separators go
+          rowsep=0:nrow(dataFr), # determines where row separators go
+          sepwidth=c(0.01,0.01), # determines the width of the separators
+          density.info="none", # turns off density plot inside color legend
+          keysize = 1.5,
+          labCol = FALSE, #remove column names
+          ColSideColors=colVec,
+          key = T
+    )  
+   }
+}
+
+## Plot cytokine heatmaps of all Cytokines
+plotHeatmaps(df.all.cyto.melis.scale.t, df.all.sampledata.melis,  myAnnotColmns)
+
+###Print them all out
+myAnnotColmnsb <- c("sim_subCST")
+
+plotHeatmaps_b <- function(dataFr, dataFr2, annotColmnsb){
+   require(gplots)
+   for(i in c(1:length(annotColmnsb))){
+    colName <- annotColmnsb[i]
+    #Define color vector
+    colVec <- as.vector(dataFr2[, colName])
+    colVec <- replace(colVec, which(colVec == "I-A"),  CSTsPallete[1])
+    colVec <- replace(colVec, which(colVec == "I-B"),  CSTsPallete[2])
+    colVec <- replace(colVec, which(colVec == "III-A"),CSTsPallete[5])
+    colVec <- replace(colVec, which(colVec == "III-B"),CSTsPallete[6])
+    colVec <- replace(colVec, which(colVec == "IV-A"), CSTsPallete[7])
+    colVec <- replace(colVec, which(colVec == "IV-B"), CSTsPallete[8])
+    colVec <- replace(colVec, which(colVec == "IV-C0"),CSTsPallete[9])
+    
+    #Generate heatmaps
+    heatmap.2(dataFr,
+          main = paste0("Heatmap with ", colName, " annotation"),
+          hclustfun = hclust2,
+          distfun=dist2,
+          trace="none",         # turns off trace lines inside the heat map
+          col=my_palette,       # use on color palette defined earlier
+          breaks=col_breaks,    # enable color transition at specified limits
+          sepcolor="gray70",    # determines the separation color
+          colsep=0:ncol(dataFr), # determines where column separators go
+          rowsep=0:nrow(dataFr), # determines where row separators go
+          sepwidth=c(0.01,0.01), # determines the width of the separators
+          density.info="none", # turns off density plot inside color legend
+          keysize = 1.5,
+          labCol = FALSE, #remove column names
+          ColSideColors=colVec,
+          key = T
+    )  
+   }
+}
+
+## Plot cytokine heatmaps of all Cytokines
+plotHeatmaps_b(df.all.cyto.melis.scale.t, df.all.sampledata.melis,  myAnnotColmnsb)
+
+###Print them all out
+myAnnotColmnsc <- c("bvscat")
+
+plotHeatmaps_c <- function(dataFr, dataFr2, annotColmnsc){
+   require(gplots)
+   for(i in c(1:length(annotColmnsc))){
+    colName <- annotColmnsc[i]
+    #Define color vector
+    colVec <- as.vector(dataFr2[, colName])
+    colVec <- replace(colVec, which(colVec == "Negative"),"white")
+    colVec <- replace(colVec, which(colVec == "Intermediate"),"grey60")
+    colVec <- replace(colVec, which(colVec == "BV"),"maroon")
+    
+    #Generate heatmaps
+    heatmap.2(dataFr,
+          main = paste0("Heatmap with ", colName, " annotation"),
+          hclustfun = hclust2,
+          distfun=dist2,
+          trace="none",         # turns off trace lines inside the heat map
+          col=my_palette,       # use on color palette defined earlier
+          breaks=col_breaks,    # enable color transition at specified limits
+          sepcolor="gray70",    # determines the separation color
+          colsep=0:ncol(dataFr), # determines where column separators go
+          rowsep=0:nrow(dataFr), # determines where row separators go
+          sepwidth=c(0.01,0.01), # determines the width of the separators
+          density.info="none", # turns off density plot inside color legend
+          keysize = 1.5,
+          labCol = FALSE, #remove column names
+          ColSideColors=colVec,
+          key = T
+    )  
+   }
+}
+
+## Plot cytokine heatmaps of all Cytokines
+plotHeatmaps_c(df.all.cyto.melis.scale.t, df.all.sampledata.melis,  myAnnotColmnsc)
+```
+
+
+```{r subset-cytokines, echo=TRUE}
+
+significant_cytokines <- c("PC1", "IL.1a" ,"IL.1b", "IL.6","IL.12p40","IL.12p70","IL.18","MIF", "TNF.a", "TNF.b","TRAIL", "MIP.1b", "CTACK", "GROa", "IP.10", "MIG", "RANTES", "LIF", "SCF" , "SCGF.b" ,  "IL.5")
+
+df.all.cyto.melis.scale.sub <- df.all.cyto.melis.scale[, significant_cytokines]
+
+df.all.cyto.melis.scale.sub.t <- t(df.all.cyto.melis.scale.sub)
+
+#[order(rownames(df.all.cyto.melis.scale.t.sub)[significant_cytokines]),]
+
+## Plot cytokine heatmaps of all Cytokines
+plotHeatmaps(df.all.cyto.melis.scale.sub.t, df.all.sampledata.melis,  myAnnotColmns)
+
+
+###Print them all out
+myAnnotColmnsb <- c( "sim_subCST")
+
+plotHeatmaps_b <- function(dataFr, dataFr2, annotColmnsb){
+   require(gplots)
+   for(i in c(1:length(annotColmnsb))){
+    colName <- annotColmnsb[i]
+    #Define color vector
+    colVec <- as.vector(dataFr2[, colName])
+    colVec <- replace(colVec, which(colVec == "I-A"),  CSTsPallete[1])
+    colVec <- replace(colVec, which(colVec == "I-B"),  CSTsPallete[2])
+    colVec <- replace(colVec, which(colVec == "III-A"),CSTsPallete[5])
+    colVec <- replace(colVec, which(colVec == "III-B"),CSTsPallete[6])
+    colVec <- replace(colVec, which(colVec == "IV-A"), CSTsPallete[7])
+    colVec <- replace(colVec, which(colVec == "IV-B"), CSTsPallete[8])
+    colVec <- replace(colVec, which(colVec == "IV-C0"),CSTsPallete[9])
+    
+    #Generate heatmaps
+    heatmap.2(dataFr,
+          main = paste0("Heatmap with ", colName, " annotation"),
+          hclustfun = hclust2,
+          distfun=dist2,
+          trace="none",         # turns off trace lines inside the heat map
+          col=my_palette,       # use on color palette defined earlier
+          breaks=col_breaks,    # enable color transition at specified limits
+          sepcolor="gray70",    # determines the separation color
+          colsep=0:ncol(dataFr), # determines where column separators go
+          rowsep=0:nrow(dataFr), # determines where row separators go
+          sepwidth=c(0.01,0.01), # determines the width of the separators
+          density.info="none", # turns off density plot inside color legend
+          keysize = 1.5,
+          labCol = FALSE, #remove column names
+          ColSideColors=colVec,
+          key = T
+    )  
+   }
+}
+
+## Plot cytokine heatmaps of all Cytokines
+plotHeatmaps_b(df.all.cyto.melis.scale.sub.t, df.all.sampledata.melis,  myAnnotColmnsb)
+
+###Print them all out
+myAnnotColmnsc <- c("bvscat")
+
+plotHeatmaps_c <- function(dataFr, dataFr2, annotColmnsc){
+   require(gplots)
+   for(i in c(1:length(annotColmnsc))){
+    colName <- annotColmnsc[i]
+    #Define color vector
+    colVec <- as.vector(dataFr2[, colName])
+    colVec <- replace(colVec, which(colVec == "Negative"),"white")
+    colVec <- replace(colVec, which(colVec == "Intermediate"),"grey60")
+    colVec <- replace(colVec, which(colVec == "BV"),"maroon")
+    
+    #Generate heatmaps
+    heatmap.2(dataFr,
+          main = paste0("Heatmap with ", colName, " annotation"),
+          hclustfun = hclust2,
+          distfun=dist2,
+          trace="none",         # turns off trace lines inside the heat map
+          col=my_palette,       # use on color palette defined earlier
+          breaks=col_breaks,    # enable color transition at specified limits
+          sepcolor="gray70",    # determines the separation color
+          colsep=0:ncol(dataFr), # determines where column separators go
+          rowsep=0:nrow(dataFr), # determines where row separators go
+          sepwidth=c(0.01,0.01), # determines the width of the separators
+          density.info="none", # turns off density plot inside color legend
+          keysize = 1.5,
+          labCol = FALSE, #remove column names
+          ColSideColors=colVec,
+          key = T
+    )  
+   }
+}
+
+## Plot cytokine heatmaps of all Cytokines
+plotHeatmaps_c(df.all.cyto.melis.scale.sub.t, df.all.sampledata.melis,  myAnnotColmnsc)
+
+
+```
+

@@ -1,0 +1,54 @@
+"0","### Correlation analyses:"
+"0","#cor.test(dt.ps2.v2.cyto.otu$Prevotella.genogroup_2, dt.ps2.v2.cyto.otu$IL.1a, method=c(""pearson"", ""kendall"", ""spearman""))"
+"0","library(""Hmisc"")"
+"2","package ‘Hmisc’ was built under R version 3.5.2"
+"2","Loading required package: survival
+"
+"2","package ‘survival’ was built under R version 3.5.2"
+"2","Loading required package: Formula
+"
+"2","
+Attaching package: ‘Hmisc’
+
+"
+"2","The following objects are masked from ‘package:plyr’:
+
+    is.discrete, summarize
+
+"
+"2","The following object is masked from ‘package:ape’:
+
+    zoom
+
+"
+"2","The following object is masked from ‘package:Biobase’:
+
+    contents
+
+"
+"2","The following object is masked from ‘package:plotly’:
+
+    subplot
+
+"
+"2","The following objects are masked from ‘package:dplyr’:
+
+    src, summarize
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    format.pval, units
+
+"
+"0","flattenCorrMatrix <- function(cormat, pmat) {"
+"0","  ut <- upper.tri(cormat)"
+"0","  data.frame("
+"0","    row = rownames(cormat)[row(cormat)[ut]],"
+"0","    column = rownames(cormat)[col(cormat)[ut]],"
+"0","    cor  =(cormat)[ut],"
+"0","    p = pmat[ut]"
+"0","    )"
+"0","}"
+"0","res2<-rcorr(as.matrix(dt.ps2.v2.cyto.otu))"
+"0","flattenCorrMatrix(res2$r, res2$P)"

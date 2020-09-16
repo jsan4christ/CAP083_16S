@@ -1,0 +1,8 @@
+"0","  #stat_compare_means(aes(label = ..p.signif..), method = ""kruskal.test"")"
+"0","## Cytokines based on heatmap"
+"0","# STIs vs Cytokines (GROa)"
+"0","#compare_means(GROa ~ CSTs, dt.ps1.NoSTIs)"
+"0","p.NoSTIs.GROa <- ggboxplot( dt.ps1.NoSTIs, x = ""sim_CST"", y = ""GROa"", color = ""sim_CST"", palette = CSTsPallete, add = c(""jitter"", ""median_iqr"")) +"
+"0","  xlab(""CSTs"") +"
+"0","  theme_light()"
+"0","p.NoSTIs.GROa + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"

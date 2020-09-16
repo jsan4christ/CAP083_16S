@@ -1,0 +1,98 @@
+"0","# Set up required packages"
+"0",".cran_packages <- c(""gplots"", ""reshape2"", ""plyr"", ""dendextend"")"
+"0",".bioc_packages <- c()"
+"0",".inst <- .cran_packages %in% installed.packages()"
+"0","if(any(!.inst)) {"
+"0","  install.packages(.cran_packages[!.inst])"
+"0","}"
+"0",".inst <- .bioc_packages %in% installed.packages()"
+"0","if(any(!.inst)) {"
+"0","  source(""http://bioconductor.org/biocLite.R"")"
+"0","  biocLite(.bioc_packages[!.inst], ask = F)"
+"0","}"
+"0","# Load packages into session, and print package version"
+"0","sapply(c(.cran_packages, .bioc_packages), require, character.only = TRUE)"
+"2","Loading required package: gplots
+"
+"2","
+Attaching package: ‘gplots’
+
+"
+"2","The following object is masked from ‘package:IRanges’:
+
+    space
+
+"
+"2","The following object is masked from ‘package:S4Vectors’:
+
+    space
+
+"
+"2","The following object is masked from ‘package:stats’:
+
+    lowess
+
+"
+"2","Loading required package: dendextend
+"
+"2","
+---------------------
+Welcome to dendextend version 1.10.0
+Type citation('dendextend') for how to cite the package.
+
+Type browseVignettes(package = 'dendextend') for the package vignette.
+The github page is: https://github.com/talgalili/dendextend/
+
+Suggestions and bug-reports can be submitted at: https://github.com/talgalili/dendextend/issues
+Or contact: <tal.galili@gmail.com>
+
+	To suppress this message use:  suppressPackageStartupMessages(library(dendextend))
+---------------------
+
+"
+"2","
+Attaching package: ‘dendextend’
+
+"
+"2","The following object is masked from ‘package:ggpubr’:
+
+    rotate
+
+"
+"2","The following objects are masked from ‘package:ape’:
+
+    ladderize, rotate
+
+"
+"2","The following object is masked from ‘package:expss’:
+
+    set
+
+"
+"2","The following object is masked from ‘package:data.table’:
+
+    set
+
+"
+"2","The following object is masked from ‘package:permute’:
+
+    shuffle
+
+"
+"2","The following object is masked from ‘package:stats’:
+
+    cutree
+
+"
+"1","    gplots "
+"1","  reshape2 "
+"1","      plyr "
+"1","dendextend "
+"1","
+"
+"1","      TRUE "
+"1","      TRUE "
+"1","      TRUE "
+"1","      TRUE "
+"1","
+"

@@ -1,0 +1,8 @@
+"0","  #stat_compare_means(aes(label = ..p.signif..), method = ""kruskal.test"")"
+"0","# No-STIs vs Cytokines (IL.8) "
+"0","ggerrorplot(dt.ps1.NoSTIs, x = ""sim_CST"", y = ""TNF.a"", palette = CSTsPallete,"
+"0","            desc_stat = ""median_iqr"", color = ""sim_CST"","
+"0","            add = ""jitter"", add.params = list(color = ""darkgray"")) +"
+"0","  theme_light() + "
+"0","  stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) +"
+"0","  xlab(""CSTs"") #+ # Add pairwise comparisons p-value"

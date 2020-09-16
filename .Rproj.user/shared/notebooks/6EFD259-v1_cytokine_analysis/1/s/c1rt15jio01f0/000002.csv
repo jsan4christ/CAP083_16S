@@ -1,0 +1,54 @@
+"0","# Set up required packages"
+"0",".cran_packages <- c(""FactoMineR"", ""factoextra"", ""ggpubr"", ""ggrepel"", ""dplyr"", ""cowplot"")"
+"0",".bioc_packages <- c()"
+"0",".inst <- .cran_packages %in% installed.packages()"
+"0","if(any(!.inst)) {"
+"0","  install.packages(.cran_packages[!.inst])"
+"0","}"
+"0",".inst <- .bioc_packages %in% installed.packages()"
+"0","if(any(!.inst)) {"
+"0","  source(""http://bioconductor.org/biocLite.R"")"
+"0","  biocLite(.bioc_packages[!.inst], ask = F)"
+"0","}"
+"0","# Load packages into session, and print package version"
+"0","sapply(c(.cran_packages, .bioc_packages), require, character.only = TRUE)"
+"2","Loading required package: FactoMineR
+"
+"2","Loading required package: factoextra
+"
+"2","Welcome! Related Books: `Practical Guide To Cluster Analysis in R` at https://goo.gl/13EFCZ
+"
+"2","Loading required package: ggrepel
+"
+"2","Loading required package: cowplot
+"
+"2","
+Attaching package: ‘cowplot’
+
+"
+"2","The following object is masked from ‘package:ggpubr’:
+
+    get_legend
+
+"
+"2","The following object is masked from ‘package:ggplot2’:
+
+    ggsave
+
+"
+"1","FactoMineR "
+"1","factoextra "
+"1","    ggpubr "
+"1","   ggrepel "
+"1","     dplyr "
+"1","   cowplot "
+"1","
+"
+"1","      TRUE "
+"1","      TRUE "
+"1","      TRUE "
+"1","      TRUE "
+"1","      TRUE "
+"1","      TRUE "
+"1","
+"

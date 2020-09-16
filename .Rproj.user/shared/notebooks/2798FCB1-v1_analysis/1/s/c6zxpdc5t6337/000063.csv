@@ -1,0 +1,108 @@
+"0","cat(""\n"")"
+"1","
+"
+"0","source(""scripts/heatmap_function.R"")"
+"2","------------------------------------------------------------------------------------------------------------------------------------------------
+"
+"2","You have loaded plyr after dplyr - this is likely to cause problems.
+If you need functions from both plyr and dplyr, please load plyr first, then dplyr:
+library(plyr); library(dplyr)
+"
+"2","------------------------------------------------------------------------------------------------------------------------------------------------
+"
+"2","
+Attaching package: ‘plyr’
+
+"
+"2","The following object is masked from ‘package:ggpubr’:
+
+    mutate
+
+"
+"2","The following object is masked from ‘package:matrixStats’:
+
+    count
+
+"
+"2","The following object is masked from ‘package:IRanges’:
+
+    desc
+
+"
+"2","The following object is masked from ‘package:S4Vectors’:
+
+    rename
+
+"
+"2","The following object is masked from ‘package:expss’:
+
+    split_labels
+
+"
+"2","The following objects are masked from ‘package:plotly’:
+
+    arrange, mutate, rename, summarise
+
+"
+"2","The following objects are masked from ‘package:dplyr’:
+
+    arrange, count, desc, failwith, id, mutate, rename, summarise, summarize
+
+"
+"2","The following object is masked from ‘package:purrr’:
+
+    compact
+
+"
+"0","          "
+"0","top25 <- names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra), decreasing=T))[1:25]"
+"0","ps1.v1.cst.glom.Species.ra.top25 <- prune_taxa(top25, ps1.v1.cst.glom.Species.ra)"
+"0","taxa.order_ <- names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra.top25)))"
+"0","ps2.v1v2v3.ids <- readRDS(""results/v1v2v3-ids.txt"")"
+"0","sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds <- 0"
+"0","sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds[sample_data(ps1.v1.cst.glom.Species.ra.top25)$ParticipantID %in% ps2.v1v2v3.ids] <- 1"
+"0","sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds <- factor(sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds)"
+"0","#taxa.order <- taxa.order[c(3,1,2,4:15)] #Reorder by CT effect"
+"0","sample.order <- rownames(sample_data(ps1.v1.cst.glom.Species.ra.top25)[order(get_variable(ps1.v1.cst.glom.Species.ra.top25, ""sim_CST""), get_variable(ps1.v1.cst.glom.Species.ra.top25, ""ShannonLgT""))])"
+"0","#tax_table(ps1.v1.cst.glom.Species.ra.top25) <- tax_table(ps1.v1.cst.glom.Species.ra.top25)[top25,]"
+"0","hm <- plot_heatmap.2(ps1.v1.cst.glom.Species.ra.top25, taxa.label=""Species"", sample.order=sample.order, taxa.order=taxa.order_)"
+"2","Scale for 'fill' is already present. Adding another scale for 'fill', which will replace the existing scale.
+"
+"0","hm <- hm + theme(axis.title.x = element_text(size=10),"
+"0","    axis.title.y = element_text(size=10),"
+"0","    axis.text.x = element_blank(),"
+"0","    axis.text.y = element_text(size=7),"
+"0","    plot.title = element_text(size=8),"
+"0","    legend.text = element_text(size=7),"
+"0","    legend.title = element_text(size=8),"
+"0","    # legend.margin = unit(c(0.1,0.1,0.1,0.1),""mm""),"
+"0","    # legend.key.height = unit(1, ""in""),"
+"0","    legend.key.width = unit(0.15, ""in"")#,"
+"0","    #plot.margin=unit(c(0,0,0,0),""mm"")"
+"0","    )"
+"0","CSTColors <- brewer.pal(11,""Paired"")[c(1,2,3,4,5,6,7,8,9,10,11)] # Length 5 for consistency with pre-revision CT+ coloration"
+"0","names(CSTColors) <- CSTs"
+"0","CSTColorScale <- scale_colour_manual(name = ""CST"", values = CSTColors[1:11])"
+"0","CSTFillScale <- scale_fill_manual(name = ""CST"", breaks = CSTs_all, values = CSTsPalleteNamed)"
+"0","### CHANGING SPECIES TO TAXA ON YLABEL"
+"0","labvec <- as(tax_table(ps1.v1.cst.glom.Species.ra.top25)[, ""Species""], ""character"")"
+"0","names(labvec) <- taxa_names(ps1.v1.cst.glom.Species.ra.top25)"
+"0","labvec <- labvec[taxa.order]"
+"0","#labvec[is.na(labvec)] <- """""
+"0","hm <- hm + scale_y_discrete(""Taxa"", labels = labvec)"
+"2","Scale for 'y' is already present. Adding another scale for 'y', which will replace the existing scale.
+"
+"0","hm <- hm + theme(axis.title = element_text(size=10))"
+"0","hcbdf <- data.frame(sample_data(ps1.v1.cst.glom.Species.ra.top25))"
+"0","hcbdf <- hcbdf[sample.order,] #resolve"
+"0","hcbdf$index <- seq(1,nsamples(ps1.v1.cst.glom.Species.ra.top25))"
+"0","hcb <- make_hcb(hcbdf, ""sim_CST"", name=""CSTs"", fillScale = CSTFillScale)"
+"0","hcb <- hcb + annotate(""text"", x=tapply(hcbdf$index, hcbdf[,""sim_CST"",drop=T], mean), y=1,"
+"0","label=levels(hcbdf[,""sim_CST"",drop=T]), size=2)"
+"0","followedIds <- make_hcb(hcbdf, ""allVisitIds"", name=""Followed ID"", "
+"0","                     fillScale = scale_fill_manual(values=c(""0""=""white"", ""1""=""grey60"")))"
+"0","bvscores <- make_hcb(hcbdf, ""bvscat"", name=""Nugent Score"", "
+"0","                     fillScale = scale_fill_manual(name=""BV Category"", values=c(""Negative""=""white"", ""Intermediate""=""grey60"", ""BV""=""maroon""), guide = guide_legend(reverse = TRUE)))"
+"0","bvscores <- bvscores + theme(axis.text.y = element_text(size=8, face=""bold"", color=""grey60""))"
+"0","Fig2 <- mush(hm, list(followedIds, bvscores, hcb))"
+"0","grid.newpage() #unit.pmax from grid"

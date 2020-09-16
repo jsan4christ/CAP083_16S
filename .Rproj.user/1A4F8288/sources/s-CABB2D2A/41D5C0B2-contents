@@ -1,0 +1,425 @@
+```{r initiate-environment-v1, echo=TRUE, warning=FALSE}
+### Load visit 1 analysis specific packages
+# Set up required packages
+.cran_packages <- c("ggpubr", "mclust", "dunn.test", "cluster")
+.bioc_packages <- c()
+
+.inst <- .cran_packages %in% installed.packages()
+if(any(!.inst)) {
+  install.packages(.cran_packages[!.inst])
+}
+.inst <- .bioc_packages %in% installed.packages()
+if(any(!.inst)) {
+  source("http://bioconductor.org/biocLite.R")
+  biocLite(.bioc_packages[!.inst], ask = F)
+}
+# Load packages into session, and print package version
+sapply(c(.cran_packages, .bioc_packages), require, character.only = TRUE)
+```
+
+### Sample sequencing depth
+
+```{r visit-one-data}
+## Sequencing depth summary
+dt.ps2.v1v2v3.sample_data = cbind(as(sample_data(ps2.v1v2v3), "data.frame"),
+                          TotalReads = sample_sums(ps2.v1v2v3)) ##Total reads is sequence depth
+gg.SeqDepth = ggplot(dt.ps2.v1v2v3.sample_data, aes(TotalReads)) + geom_histogram() + ggtitle("Sequencing Depth")
+ggplotly(gg.SeqDepth)
+
+```
+The graph shows how many reads each sample has. The Y-axis shows the number samples and the X-axis shows the total number of reads for those samples
+
+## Sample distribution accross visits
+
+How are the participants distributed accross visits?
+
+```{r participants-dist-accross-visit}
+## Distribution of BV accross visits
+cat("BV status")
+table(sample_data(ps2.v1v2v3)$bvscat, sample_data(ps2.v1v2v3)$VisitCode)
+
+
+cat("\nInflammation")
+table(sample_data(ps2.v1v2v3)$Inflammation, sample_data(ps2.v1v2v3)$VisitCode)
+
+cat("\nInflammation vs BV")
+table(sample_data(ps2.v1v2v3)$Inflammation, sample_data(ps2.v1v2v3)$bvscat)
+
+cat("\nSTI")
+table(sample_data(ps2.v1v2v3)$STI, sample_data(ps2.v1v2v3)$VisitCode)
+```
+
+## Estimate richness and transform to relative abundance
+
+```{r }
+## Estimate richness
+ps2.v1v2v3.rich <- cestimate_richness(ps2.v1v2v3)
+
+## Aglomerate to species
+ps2.v1v2v3.glom.species <- tax_glom(ps2.v1v2v3.rich, "Species")
+
+## Transform to relative abundance
+ps2.v1v2v3.glom.species.ra <- transform_sample_counts(ps2.v1v2v3.glom.species, function(x) {
+  x/sum(x)
+})
+otu_table(ps2.v1v2v3.glom.species.ra)[is.nan(otu_table(ps2.v1v2v3.glom.species.ra))] <- 0
+
+## Distribution of samples accross CSTS
+levels(sample_data(ps2.v1v2v3.glom.species.ra)$sim_CST)
+
+table(sample_data(ps2.v1v2v3.glom.species.ra)$sim_CST)
+
+table(sample_data(ps2.v1v2v3.glom.species.ra)$sim_CST, sample_data(ps2.v1v2v3.glom.species.ra)$VisitCode)
+
+table(sample_data(ps2.v1v2v3.glom.species.ra)$sim_CST, sample_data(ps2.v1v2v3.glom.species.ra)$bvscat)
+
+#Sort by CTS snd Shannon indexes before proceeding
+sample_data(ps2.v1v2v3.glom.species.ra) <- sample_data(ps2.v1v2v3.glom.species.ra)[order(sample_data(ps2.v1v2v3.glom.species.ra)$sim_CST, sample_data(ps2.v1v2v3.glom.species.ra)$ShannonLgT), ]
+```
+
+ 
+It does not appear that BV has any relationship with inflammation and we can confirm so from the statistical test.
+
+## Alpha and beta diversity ordinations
+
+```{r echo=FALSE}
+
+# PCoA plots -color: bvscat
+
+ps2.v1v2v3.glom.species.ra <- prune_samples(sample_sums(ps2.v1v2v3.glom.species.ra) > 0, ps2.v1v2v3.glom.species.ra)
+ps2.v1v2v3.glom.species.ra <- prune_taxa(taxa_sums(ps2.v1v2v3.glom.species.ra) > 0, ps2.v1v2v3.glom.species.ra)
+
+ord.ps2.v1v2v3.glom.species.ra.pcoa.bray <- ordinate(ps2.v1v2v3.glom.species.ra, method = "PCoA", distance = "bray")
+p.ord.ps2.v1v2v3.glom.species.ra.pcoa.bray <- plot_ordination(ps2.v1v2v3.glom.species.ra, 
+                                                              ord.ps2.v1v2v3.glom.species.ra.pcoa.bray, color = "SeqRun", shape = "STI", type = "samples", 
+                                                              title = "Bray Curtis Accross Visits") + 
+  theme_light()
+p.ord.ps2.v1v2v3.glom.species.ra.pcoa.bray + facet_wrap(~VisitCode) + geom_point(size=1)
+
+# PCoA plots -color: visitcode
+sample_data(ps2.v1v2v3.glom.species.ra)$RowNo <- paste(seq_along(1 : nrow(sample_data(ps2.v1v2v3.glom.species.ra))))
+p.ord.ps2.v1v2v3.glom.species.ra.pcoa.bray.visits <- plot_ordination(ps2.v1v2v3.glom.species.ra, 
+                                                                     ord.ps2.v1v2v3.glom.species.ra.pcoa.bray, color = "bvscat", shape = "STI", 
+                                                                     type = "samples", title = "Bray Curtis Accross Visits") +
+  #geom_text_repel(aes(label = RowNo), direction = "x") +
+  theme_light() 
+p.ord.ps2.v1v2v3.glom.species.ra.pcoa.bray.visits + geom_point(size=1)
+
+## Create factor levels for visits
+sample_data(ps2.v1v2v3.glom.species.ra)$VisitCode <- factor(sample_data(ps2.v1v2v3.glom.species.ra)$VisitCode, levels = c(1000, 1020, 1030))
+
+# Create factor variable for BV clearence
+table(sample_data(ps2.v1v2v3.glom.species.ra)$bvscat, sample_data(ps2.v1v2v3.glom.species.ra)$VisitCode)
+bv.negative.at.start <- sample_data(ps2.v1v2v3.glom.species.ra)$ParticipantID[sample_data(ps2.v1v2v3.glom.species.ra)$VisitCode == 1000 & sample_data(ps2.v1v2v3.glom.species.ra)$bvscat == "Negative"]
+bv.negative.at.start
+
+#Shorter names for taxa (instead of sequences)
+#ps2.v1v2v3.sn <- ps2.v1v2v3.f #shortnames (sn)
+#full.taxa.names <- taxa_names(ps2.v1v2v3.sn)
+#my.taxa.names <- data.frame(full.taxa.names, paste0("Seq", seq(1:length(full.taxa.names))))
+#names(my.taxa.names) <- c("Taxa", "ShortName")
+#taxa_names(ps2.v1v2v3.sn) <- my.taxa.names$ShortName 
+
+```
+### Change in Shannon Diversity accross visits (Overall significance)
+```{r}
+
+sd <- data.frame(sample_data(ps2.v1v2v3.glom.species.ra))
+ggpaired(sd, x = "VisitCode", y = "ShannonLgT",
+         color = "VisitCode", line.color = "gray", line.size = 0.4,
+         palette = visitsPallet, id = "ParticipantID", width = 0.1 ) +
+  scale_x_discrete(breaks=c(1000, 1020, 1030), labels=c("Baseline", "Visit 2", "Visit 3")) +
+  scale_color_discrete(name = "Clinical Visits", labels = c("Baseline", "Visit 2", "Visit 3")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme_light() +
+  ylab("Shannon Diversity") +
+  xlab("Clinical Visits") +
+  stat_compare_means(paired = TRUE)
+
+```
+
+### Change in Shannon diversity levels accross visits (compare visits)
+```{r}
+
+sd <- data.frame(sample_data(ps2.v1v2v3.glom.species.ra))
+## Change in Shannon diversity accross visits
+my_comparisons <- list( c("1000", "1020"), c("1020", "1030"))
+ggpaired(sd, x = "VisitCode", y = "ShannonLgT",
+         color = "VisitCode", line.color = "gray", line.size = 0.4,
+         palette = visitsPallet, id = "ParticipantID", width = 0.1 ) +
+  scale_x_discrete(breaks=c(1000, 1020, 1030), labels=c("Baseline", "Visit 2", "Visit 3")) +
+  scale_color_discrete(name = "Clinical Visits", labels = c("Baseline", "Visit 2", "Visit 3")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme_light() +
+  ylab("Shannon Diversity") +
+  xlab("Clinical Visits") +
+  stat_compare_means(paired = TRUE, comparisons = my_comparisons)
+
+```
+
+PS: Legends for the annotations will be imposed in the final graphics using a different program. However, for BV, No BV=white, intermediate=grey and bv positive=maroon. For the rest of the annotations, color=positive.
+
+<!-- ## Heatmaps -->
+
+<!-- ### CST specific heatmaps -->
+<!-- Individual cluster heatmaps showing distribution within a single CST. -->
+<!-- ```{r} -->
+
+<!-- CSTs <- as.character(unique(sample_data(ps1.v1.cst.glom.Species.ra)$sim_CST)) -->
+<!-- taxa.order <- names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra))) -->
+
+<!-- table(sample_data(ps1.v1.cst.glom.Species.ra)$sim_CST) ## II only has two samples and so they will not have heatmaps created. We cannot generate heatmap so we will exclude it. -->
+
+<!-- for(CST in CSTs[-c(6)]) { -->
+<!--   ps1.v1.cst.glom.Species.ra.top25 <- prune_taxa(names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra), T))[1:25], ps1.v1.cst.glom.Species.ra) -->
+<!--   ps1.v1.cst.glom.Species.ra.top25 <- prune_samples(sample_data(ps1.v1.cst.glom.Species.ra.top25)$sim_CST == CST,     ps1.v1.cst.glom.Species.ra.top25) -->
+<!--   print(plot_heatmap(ps1.v1.cst.glom.Species.ra.top25, taxa.label="Species", sample.label = "SampleID", taxa.order=taxa.order) + ggtitle(paste(CST))) -->
+<!-- } -->
+
+<!-- ``` -->
+
+<!-- ### Combined Heatmap -->
+
+<!-- Combined heatmap showing all the samples ordered by CSTs and Shannon diversity.    -->
+
+<!-- PS: Legends for the annotations will be imposed in the final graphics using a different program. However, for BV, No BV=white, intermediate=grey and bv positive=maroon. Ids followed up in sebsequent visits are indicated with a grey stripe in the 'Followed id' annotation.   -->
+<!-- ```{r echo=FALSE} -->
+<!-- cat("\n") -->
+<!-- source("scripts/heatmap_function.R") -->
+
+<!-- top25 <- names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra), decreasing=T))[1:25] -->
+<!-- ps1.v1.cst.glom.Species.ra.top25 <- prune_taxa(top25, ps1.v1.cst.glom.Species.ra) -->
+
+<!-- taxa.order_ <- names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra.top25))) -->
+
+<!-- ps2.v1v2v3.ids <- readRDS("results/v1v2v3-ids.txt") -->
+
+<!-- sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds <- 0 -->
+<!-- sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds[sample_data(ps1.v1.cst.glom.Species.ra.top25)$ParticipantID %in% ps2.v1v2v3.ids] <- 1 -->
+<!-- sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds <- factor(sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds) -->
+
+<!-- sample.order <- rownames(sample_data(ps1.v1.cst.glom.Species.ra.top25)[order(get_variable(ps1.v1.cst.glom.Species.ra.top25, "sim_CST"), get_variable(ps1.v1.cst.glom.Species.ra.top25, "ShannonLgT"))]) -->
+
+<!-- hm <- plot_heatmap.2(ps1.v1.cst.glom.Species.ra.top25, taxa.label="Species", sample.order=sample.order, taxa.order=taxa.order_) -->
+<!-- hm <- hm + theme(axis.title.x = element_text(size=10), -->
+<!--     axis.title.y = element_text(size=10), -->
+<!--     axis.text.x = element_blank(), -->
+<!--     axis.text.y = element_text(size=7), -->
+<!--     plot.title = element_text(size=8), -->
+<!--     legend.text = element_text(size=7), -->
+<!--     legend.title = element_text(size=8), -->
+<!--     legend.key.width = unit(0.15, "in")) -->
+
+<!-- CSTColors <- brewer.pal(11,"Paired")[c(1,2,3,4,5,6,7,8,9,10,11)] # Length 5 for consistency with pre-revision CT+ coloration -->
+<!-- names(CSTColors) <- CSTs -->
+<!-- CSTColorScale <- scale_colour_manual(name = "CST", values = CSTColors[1:11]) -->
+<!-- CSTFillScale <- scale_fill_manual(name = "CST", breaks = CSTs_all, values = CSTsPalleteNamed) -->
+
+<!-- ### CHANGING SPECIES TO TAXA ON YLABEL -->
+<!-- labvec <- as(tax_table(ps1.v1.cst.glom.Species.ra.top25)[, "Species"], "character") -->
+<!-- names(labvec) <- taxa_names(ps1.v1.cst.glom.Species.ra.top25) -->
+<!-- labvec <- labvec[taxa.order] -->
+
+<!-- hm <- hm + scale_y_discrete("Taxa", labels = labvec) -->
+<!-- hm <- hm + theme(axis.title = element_text(size=10)) -->
+
+<!-- hcbdf <- data.frame(sample_data(ps1.v1.cst.glom.Species.ra.top25)) -->
+<!-- hcbdf <- hcbdf[sample.order,] #resolve -->
+<!-- hcbdf$index <- seq(1,nsamples(ps1.v1.cst.glom.Species.ra.top25)) -->
+<!-- hcb <- make_hcb(hcbdf, "sim_CST", name="CSTs", fillScale = CSTFillScale) -->
+<!-- hcb <- hcb + annotate("text", x=tapply(hcbdf$index, hcbdf[,"sim_CST",drop=T], mean), y=1, -->
+<!-- label=levels(hcbdf[,"sim_CST",drop=T]), size=2) -->
+<!-- followedIds <- make_hcb(hcbdf, "allVisitIds", name="Followed ID",  -->
+<!--                      fillScale = scale_fill_manual(values=c("0"="white", "1"="grey60"))) -->
+<!-- bvscores <- make_hcb(hcbdf, "bvscat", name="Nugent Score",  -->
+<!--                      fillScale = scale_fill_manual(name="BV Category", values=c("Negative"="white", "Intermediate"="grey60", "BV"="maroon"), guide = guide_legend(reverse = TRUE))) -->
+<!-- bvscores <- bvscores + theme(axis.text.y = element_text(size=8, face="bold", color="grey60")) -->
+<!-- Fig2 <- mush(hm, list(followedIds, bvscores, hcb)) -->
+<!-- grid.newpage() #unit.pmax from grid -->
+<!-- grid.draw(Fig2) -->
+
+<!-- #Distribution of BV accross CSTs -->
+<!-- cat("Distribution of BV accross CSTs") -->
+<!-- table(sample_data(ps1.v1.cst.glom.Species.ra.top25)$sim_CST, sample_data(ps1.v1.cst.glom.Species.ra.top25)$bvscat) -->
+<!-- ``` -->
+
+<!-- ## Plot Ordinations and Diversity Analyses -->
+
+<!-- ### Alpha Diversity -->
+
+<!-- Determine alpha diversity analysis -->
+<!-- ```{r alpha-diverstiy-plots, echo=FALSE, ,  fig.width= 8} -->
+
+<!-- dt.ps1.v1.cst.rich <- data.frame(sample_data(ps1.v1.cst.glom.Species.ra)) -->
+
+<!-- #Plot log10 transformed shannon indexes -->
+<!-- bp <- ggplot(dt.ps1.v1.cst.rich, aes(x = (factor(dt.ps1.v1.cst.rich$SampleID, levels = sample.order)), y = ShannonLgT, color = CSTs)) + -->
+<!--   geom_bar(stat = "identity") + -->
+<!--   scale_fill_manual(CSTsPallete) + -->
+<!--   xlab("Samples") + -->
+<!--   theme_classic() + -->
+<!--   theme(axis.text.x=element_blank()) -->
+
+<!-- # Observed -->
+<!-- gg.ps1.v1.cst.observed <- ggplot(dt.ps1.v1.cst.rich, aes(x = STI, y = Observed,  color = bvscat)) + -->
+<!--   stat_smooth(method = "loess") + -->
+<!--   geom_boxplot() + -->
+<!--   labs(y = "Observed", color = "bvscat", x = "STI") + -->
+<!--   #geom_jitter(size = 2, alpha = 0.5, width = 0.5) + -->
+<!--   theme(legend.position="bottom")# +# + -->
+<!--   #scale_color_manual(values = c("black", "chocolate", "green", "purple", "blue")) -->
+
+<!-- # Shannon diversity -->
+<!-- gg.ps1.v1.cst.shannon <- ggplot(dt.ps1.v1.cst.rich, aes(x = STI, y = ShannonLgT, color = bvscat)) + -->
+<!--   stat_smooth(method = "loess") + -->
+<!--   geom_boxplot(alpha=0.1) + -->
+<!--   labs(y = "Shannon", color = "Any STI", x = "STI") + -->
+<!--   #geom_jitter(size = 2, alpha = 0.5, width = 0.5) + -->
+<!--   theme(legend.position="bottom")# + #+ -->
+<!--   #scale_color_manual(values = c("black", "chocolate", "green", "purple", "blue")) -->
+
+<!-- # Simpson diversity -->
+<!-- gg.ps1.v1.cst.simpson <- ggplot(dt.ps1.v1.cst.rich, aes(x = STI, y = Simpson, color = bvscat)) + -->
+<!--   #stat_smooth(method = "loess") + -->
+<!--   geom_boxplot( alpha=0.1) + -->
+<!--   labs(y = "Simpson", color = "Any STI", x = "STI") + -->
+<!--   #geom_jitter(size = 2, alpha = 0.5, width = 0.5) + -->
+<!--   theme(legend.position="bottom")# + -->
+<!--   #scale_color_manual(values = c("black", "chocolate", "green", "purple", "blue")) -->
+
+<!-- # Note: ggarrange enables you to directly add labels to plot grids -->
+<!-- grid.arrange(gg.ps1.v1.cst.observed, gg.ps1.v1.cst.shannon, gg.ps1.v1.cst.simpson, ncol = 1, nrow = 3) -->
+
+<!-- #A quick test for normalcy -->
+<!-- shapiro.test(dt.ps1.v1.cst.rich$ShannonLgT) -->
+<!-- hist(dt.ps1.v1.cst.rich$ShannonLgT, main = "Histogram of Log10 Transformed Shannon Diversity Indexes", xlab = "Shannon (Log10 Transformed)") -->
+
+<!-- ## Statistical analysis on alpha diversity -->
+
+<!-- #By BVCat -->
+<!-- kruskal.test(dt.ps1.v1.cst.rich$ShannonLgT , as.factor(dt.ps1.v1.cst.rich$bvscat)) -->
+<!-- dunn.test(dt.ps1.v1.cst.rich$ShannonLgT, dt.ps1.v1.cst.rich$bvscat) -->
+<!-- ggplot(dt.ps1.v1.cst.rich, aes(bvscat, ShannonLgT, color = bvscat)) +  -->
+<!--   geom_boxplot() + -->
+<!--   geom_jitter(shape=16, position=position_jitter(0.2)) + -->
+<!--   ylab("Shannon (Log10 transformed)") -->
+
+<!-- #By CST -->
+<!-- kruskal.test(dt.ps1.v1.cst.rich$ShannonLgT , dt.ps1.v1.cst.rich$sim_CST) -->
+<!-- dunn.test(dt.ps1.v1.cst.rich$ShannonLgT, dt.ps1.v1.cst.rich$sim_CST) -->
+<!-- ggplot(dt.ps1.v1.cst.rich, aes(sim_CST, ShannonLgT, label = Position)) +  -->
+<!--   geom_boxplot() + -->
+<!--   geom_jitter(shape=16, position=position_jitter(0.2), aes(color = SeqRun))  + -->
+<!--   ylab("Shannon (Log10 transformed)") -->
+
+<!-- #By STI -->
+<!-- wilcox.test(ShannonLgT ~ STI, data = dt.ps1.v1.cst.rich) -->
+<!-- wilcox.test(ShannonLgT ~ Inflammation, data = dt.ps1.v1.cst.rich) -->
+
+<!-- #By PSA -->
+<!-- wilcox.test(ShannonLgT ~ PSA, data = dt.ps1.v1.cst.rich) -->
+
+
+<!-- #Mixed models to see combined effects -->
+<!-- glm(formula = ShannonLgT ~ bvscat * Inflammation, data = dt.ps1.v1.cst.rich) -->
+<!-- ``` -->
+
+<!-- ## Betadiversity -->
+
+<!-- ### By sequencing run -->
+<!-- ```{r} -->
+<!-- evals <- ord.pcoa.bray$values$Eigenvalues -->
+<!-- p.pcoa.bray1 <- plot_ordination(ps1.v1.cst.glom.Species.ra, ord.pcoa.bray, color = "SeqRun", axes = c(1,2)) + -->
+<!--   geom_point(size = 2) + -->
+<!--   scale_fill_manual(values = CSTsPallete) + -->
+<!--   labs(title = "PCoA of Bray Curtis (Abundance)", color = "SeqRuns") + -->
+<!--   theme_minimal() + -->
+<!--   coord_fixed(sqrt(evals[2] / evals[1])) #+ -->
+<!--   #stat_ellipse(type = "t") -->
+<!-- p.pcoa.bray1 -->
+<!-- ``` -->
+
+<!-- ### By CSTs -->
+<!-- ```{r plot-ordination, echo=FALSE} -->
+
+<!-- # Plot the data by the treatment variable -->
+<!-- y = 1000 # Set a threshold for the minimum number of acceptable reads. Can start as a guess -->
+<!-- x = "bvscat" # Set the x-axis variable you want to examine -->
+<!-- label = "SampleID" # This is the label you want to overlay on the points -->
+
+<!-- p.pcoa.jac <- plot_ordination(ps1.v1.cst.glom.Species.ra, ord.pcoa.jac, color = "sim_CST" , axes = c(1,2)) + -->
+<!--   geom_point(size = 1) + -->
+<!--   scale_fill_manual("CSTs", breaks = CSTs_all, values = CSTsPalleteNamed) + -->
+<!--   labs(title = "PCoA of Jacard (Presence/Absence)", color = "CSTs") + -->
+<!--   stat_ellipse(type = "t") + -->
+<!--   theme_minimal() -->
+
+<!-- p.pcoa.bray <- plot_ordination(ps1.v1.cst.glom.Species.ra, ord.pcoa.bray, color = "sim_CST", axes = c(1,2)) + -->
+<!--   geom_point(size = 1) + -->
+<!--   scale_fill_manual("CSTs", breaks = CSTs_all, values = CSTsPalleteNamed) + -->
+<!--   labs(title = "PCoA of Bray Curtis (Abundance)", color = "CSTs") + -->
+<!--   stat_ellipse(type = "t") + -->
+<!--   theme_minimal() -->
+
+<!-- ord.pcoa.unif <- ordinate(ps1.v1.cst.glom.Species.ra, method = "PCoA", distance = "unifrac") -->
+<!-- p.pcoa.unif <- plot_ordination(ps1.v1.cst.glom.Species.ra, ord.pcoa.unif, color = "sim_CST" , axes = c(1,2)) + -->
+<!--   scale_fill_manual("CSTs", breaks = CSTs_all, values = CSTsPalleteNamed) + -->
+<!--   geom_point(size = 1) + -->
+<!--   labs(title = "PCoA of Unifrac Distance", color = "CSTs") + -->
+<!--   stat_ellipse(type = "t") + -->
+<!--   theme_minimal() -->
+
+<!-- ord.pcoa.wunif <- ordinate(ps1.v1.cst.glom.Species.ra, method = "PCoA", distance = "wunifrac") -->
+<!-- p.pcoa.wunif <- plot_ordination(ps1.v1.cst.glom.Species.ra, ord.pcoa.wunif, color = "sim_CST", axes = c(1,2)) + -->
+<!--   scale_fill_manual("CSTs", breaks = CSTs_all, values = CSTsPalleteNamed) + -->
+<!--   geom_point(size = 1) + -->
+<!--   labs(title = "PCoA of W. Unifrac", color = "CSTs") + -->
+<!--   stat_ellipse(type = "t") + -->
+<!--   theme_minimal() -->
+
+
+<!-- grid.arrange(p.pcoa.jac, p.pcoa.bray, p.pcoa.unif, p.pcoa.wunif, ncol = 2, nrow = 2) -->
+
+<!-- cat("Cross tabulation of CTs and BV Score") -->
+<!-- table(sample_data(ps1.v1.cst.glom.Species.ra)$sim_CST, sample_data(ps1.v1.cst.glom.Species.ra)$bvscat) -->
+
+<!-- cat("Cross tabulation of CTs and Inflamation") -->
+<!-- table(sample_data(ps1.v1.cst.glom.Species.ra)$sim_CST, sample_data(ps1.v1.cst.glom.Species.ra)$Inflammation) -->
+<!-- ``` -->
+
+
+<!-- ## Between group (beta diversity) statistical testing -->
+
+<!-- Perform statistical test to confirm if any groupings identified in the ordinations are are statistically significant. -->
+
+<!-- ```{r} -->
+
+<!-- dt.ps1.v1.sample_data <- data.frame(sample_data(ps1.v1.cst.glom.Species.ra)) -->
+<!-- #print("Adonis results: Inflammation") -->
+<!-- adonis(BrayDistMat ~ Inflammation, data = dt.ps1.v1.sample_data, permutations = 1000) -->
+
+<!-- #print("Adonis results: BV Category") -->
+<!-- adonis(BrayDistMat ~ bvscat, data = dt.ps1.v1.sample_data, permutations = 1000) -->
+
+<!-- #print("Adonis results: Any STI") -->
+<!-- adonis(BrayDistMat ~ STI , data = dt.ps1.v1.sample_data, permutations = 1000) -->
+
+
+<!-- ``` -->
+
+<!-- ## Correlation between CTs and individual STIs -->
+
+<!-- Are there correlations between CTs and individual STIs? -->
+<!-- ```{r} -->
+<!-- table(hcbdf$sim_CST, hcbdf$Gonorrhoea) -->
+<!-- fisher.test(hcbdf$sim_CST, hcbdf$Gonorrhoea) -->
+
+<!-- table(hcbdf$sim_CST, hcbdf$Chlamydia) -->
+<!-- fisher.test(hcbdf$sim_CST, hcbdf$Chlamydia) -->
+
+<!-- table(hcbdf$sim_CST, hcbdf$Trichomoniasis) -->
+<!-- fisher.test(hcbdf$sim_CST, hcbdf$Trichomoniasis) -->
+
+<!-- table(hcbdf$sim_CST, hcbdf$HSV.2) -->
+<!-- fisher.test(hcbdf$sim_CST, hcbdf$HSV.2) -->
+<!-- ``` -->

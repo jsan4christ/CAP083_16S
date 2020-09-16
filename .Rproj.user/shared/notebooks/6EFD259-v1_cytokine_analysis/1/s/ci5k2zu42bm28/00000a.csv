@@ -1,0 +1,7 @@
+"0"," # stat_compare_means(aes(label = ..p.signif..), method = ""kruskal.test"")"
+"0","# No-STIs vs Cytokines (IL.1a)"
+"0","#compare_means(IL.1a ~ CSTs, dt.ps1.NoSTIs)"
+"0","p.noSTIs <- ggboxplot(dt.ps1.NoSTIs, x = ""sim_CST"", y = ""IL.1a"", color = ""sim_CST"", palette = CSTsPallete, add = ""jitter"", "
+"0","                      desc_stat = ""median_iqr"", xlab = ""sim_CST"") +"
+"0","  xlab(""CSTs"")"
+"0","p.noSTIs + stat_compare_means(aes(label = ..p.signif..), comparisons = my_comparisons) #+"
