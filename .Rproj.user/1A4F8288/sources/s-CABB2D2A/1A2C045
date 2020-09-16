@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1600266160134.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "1A2C045",
+    "lastKnownWriteTime" : 1600266426,
+    "last_content_update" : 1600266426979,
+    "path" : "~/temp/Data_Analysis/Andile/CAP083_16S/scripts/process_pecan_output.R",
+    "project_path" : "scripts/process_pecan_output.R",
+    "properties" : {
+        "cursorPosition" : "84,38",
+        "scrollLine" : "60"
+    },
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
