@@ -2,7 +2,7 @@
 
 ## Introduction
 
-In this analysis, we asses the effect of BV treatment on the microbiome.
+In this analysis, we assess the effect of BV treatment on the microbiome.
 
 ## The Workflow
 
