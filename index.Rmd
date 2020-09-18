@@ -27,25 +27,27 @@ options(scipen=2000) ##Penalty for scientific notation
 ```
 
 # Introduction
-The goals of this analysis are to;  
-a) Characterise the genital microbiome in women,   
-b) Assess the impact of STIs and vaginal disybiosis on the on this microbiome  
-c) Assess the impact of STI treatment on subsequent visits on the microbiome  
-d) To a lesser extent assess the correlation of CSTs with pro-inflammatory cytokines  
+The goals of this analysis are to:
 
-To answer these questions, data accross three time points was collected from upto 244 HIV negative women. All women who presented with BV and/or STIs at visit1 were treated with antibiotics and sheduled for a second and third review visit. At the visits, pro-inflammatory cytokines were extracted using soft-cup and bacterial DNA using a vaginal swab.
+a) To identify community state types (CSTs) based on the composition and relative abundance of bacterial species
+b) To assess whether the treatment caused individual participant transitions between CSTs, particularly towards Lactobacillus dominated CSTs
+c) Compare genital cytokine concentrations with prevalent CSTs
+ 
+
+To answer these questions, 56 women with a laboratory-diagnosed sexually transmitted infection (STI)and/or BV-intermediate or positive at baseline, attended all subsequent visits (weeks 6 and 12), and had genital specimen stored to conduct the longitudinal microbiota and cytokine analysis were included. 16S rRNA gene sequencing and multiplex bead arrays were used to characterize the composition of vaginal microbial communities and soluble biomarkers of genital inflammation in cervicovaginal swabs and SoftCup fluids. Community state types were inferred using VALENCIA, a nearest centroid classification method for vaginal microbial communities based on composition. Linear regression analysis was used to compare genital cytokine concentrations with prevalent CSTs to test the hypothesis that vaginal microbiota dominated with non-Lactobacillus species would be associated with increased cytokine concentrations compared to communities dominated by Lactobacillus speciesPrincipal component analysis (PCA) was used to obtain summary measures for the multi-variable cytokine set and performed using the FactoMineR package (https://cran.r project.org/web/packages/FactoMineR/index.html) in R (www.r-project.org).
 
 ## Part A: Characterisation of female genital tract microbiome
 What is the distribution of bacteria in these women? is there any form of clustering?
 
 ## Key results
-* 4 major CSTs identified, with a dominance of Lactobacillus inners among the health women and Gardinarrela vaginalis among the BV affected women.  
-* The four CSTs are broken down as below;  
-  CT1 - Crispatus  
-  CT2 - Inners  
-  CT3 - Multiple species (no single dominant species)  
-  CT4 - Gardarnela (also dominated by BV)  
-* Significantly associated with BV and STIs especially gonorrhea.  
+Three major CSTs identified by VALENCIA
+
+* CST I dominated by Lactobacillus crispatus,
+* CST III dominated by Lactobacillus iners,
+* CST IV characterized by a wide array of strict and facultative anaerobes without a consistent dominant species.
+* CST IV was subdived into CST IV-A representing samples with high relative abundance of BVAB1,
+* CST IV-B characterized by Gardnerella vaginalis dominance
+* CST IV-C characterized by an even community with moderate abundance of Prevotella bivia. 
 
 ```{r initiate-environment, warning=FALSE, include=FALSE}
 ### Load packages
@@ -324,6 +326,10 @@ sample_data(ps1)$sim_subCST <- as.factor(sample_data(ps1)$sim_subCST)
 
 
 ## Subset Samples with visits at all 3 time points
+
+The CAPRISA 083 study screened 267 HIV-uninfected women, and enrolled 101 women, of whom 56 had genital specimen stored accross 3 time points that were used to conduct the longitudinal microbiota and cytokine analysis.
+
+ 
 ```{r}
 
 ## Create dataset of participants followed accross all three visits
