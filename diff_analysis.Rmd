@@ -54,7 +54,9 @@ Ordinations
 
 ## Individual Visits Ordinations
 
-Visit 1 samples without BV or STIs
+### Visit 1 without BV
+
+What is the normal characterization of bacterial flora in women within this community that do not have BV?
 
 ```{r ind_visit_analyses-visit1-old, echo=FALSE}
 set.seed(1982)
@@ -125,7 +127,8 @@ grid.draw(g)
 
 ```
 
-### Visit 1 only
+### Visit 1 only, the 56 with BV
+
 ```{r ind_visit_analyses-visit1-new, echo=FALSE}
 set.seed(1982)
 source(paste0("scripts/", "heatmap_function.R"))
@@ -907,9 +910,9 @@ alluvial(
     axis_labels = c("Baseline", "6 weeks", "12 weeks")
   )
 ```
-When samples clustered together
 
-## Boxplot of samples cluster together
+### Stacked barplot of taxa present in samples split by CST
+
 ```{r all-visits-stacked-barplot, echo=FALSE}
 
 #ps2.v3.cst.glom.species.ra <- subset_taxa(ps2.v3.cst.glom.species.ra, !(Species %in% NA | Species == ""))
@@ -966,7 +969,7 @@ grid.newpage()
 grid.draw(g)
 ```
 
-Alluvial plot of samples clustered together
+### Alluvial plot showing transition of samples accross CSTs
 
 ```{r alluvial-plot-samples-clustered-together, echo=TRUE}
 
@@ -1000,7 +1003,9 @@ alluvial(
     axis_labels = c("Baseline", "6 weeks", "3 months")
   )
 ```
+
 ### Stats / Proportions
+
 ```{r}
 
 tab_v1_sim_CST <- table(ps2.v1.alluv_sd$sim_CST)

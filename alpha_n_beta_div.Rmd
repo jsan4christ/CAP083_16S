@@ -29,7 +29,7 @@ ggplotly(gg.SeqDepth)
 ```
 The graph shows how many reads each sample has. The Y-axis shows the number samples and the X-axis shows the total number of reads for those samples
 
-## Sample distribution accross visits
+### Sample distribution accross visits
 
 How are the participants distributed accross visits?
 
@@ -77,9 +77,6 @@ table(sample_data(ps2.v1v2v3.glom.species.ra)$sim_CST, sample_data(ps2.v1v2v3.gl
 sample_data(ps2.v1v2v3.glom.species.ra) <- sample_data(ps2.v1v2v3.glom.species.ra)[order(sample_data(ps2.v1v2v3.glom.species.ra)$sim_CST, sample_data(ps2.v1v2v3.glom.species.ra)$ShannonLgT), ]
 ```
 
- 
-It does not appear that BV has any relationship with inflammation and we can confirm so from the statistical test.
-
 ## Alpha and beta diversity ordinations
 
 ```{r echo=FALSE}
@@ -115,6 +112,7 @@ bv.negative.at.start
 
 ```
 ### Change in Shannon Diversity accross visits (Overall significance)
+
 ```{r}
 
 sd.ps2.v1v2v3.glom.species.ra <- data.frame(sample_data(ps2.v1v2v3.glom.species.ra))
@@ -132,6 +130,7 @@ ggpaired(sd.ps2.v1v2v3.glom.species.ra, x = "VisitCode", y = "ShannonLgT",
 ```
 
 ### Change in Shannon diversity levels accross visits (compare visits)
+
 ```{r}
 
 ## Change in Shannon diversity accross visits
@@ -151,95 +150,6 @@ ggpaired(sd.ps2.v1v2v3.glom.species.ra, x = "VisitCode", y = "ShannonLgT",
 
 PS: Legends for the annotations will be imposed in the final graphics using a different program. However, for BV, No BV=white, intermediate=grey and bv positive=maroon. For the rest of the annotations, color=positive.
 
-<!-- ## Heatmaps -->
-
-<!-- ### CST specific heatmaps -->
-<!-- Individual cluster heatmaps showing distribution within a single CST. -->
-<!-- ```{r} -->
-
-<!-- CSTs <- as.character(unique(sample_data(ps1.v1.cst.glom.Species.ra)$sim_CST)) -->
-<!-- taxa.order <- names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra))) -->
-
-<!-- table(sample_data(ps1.v1.cst.glom.Species.ra)$sim_CST) ## II only has two samples and so they will not have heatmaps created. We cannot generate heatmap so we will exclude it. -->
-
-<!-- for(CST in CSTs[-c(6)]) { -->
-<!--   ps1.v1.cst.glom.Species.ra.top25 <- prune_taxa(names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra), T))[1:25], ps1.v1.cst.glom.Species.ra) -->
-<!--   ps1.v1.cst.glom.Species.ra.top25 <- prune_samples(sample_data(ps1.v1.cst.glom.Species.ra.top25)$sim_CST == CST,     ps1.v1.cst.glom.Species.ra.top25) -->
-<!--   print(plot_heatmap(ps1.v1.cst.glom.Species.ra.top25, taxa.label="Species", sample.label = "SampleID", taxa.order=taxa.order) + ggtitle(paste(CST))) -->
-<!-- } -->
-
-<!-- ``` -->
-
-<!-- ### Combined Heatmap -->
-
-<!-- Combined heatmap showing all the samples ordered by CSTs and Shannon diversity.    -->
-
-<!-- PS: Legends for the annotations will be imposed in the final graphics using a different program. However, for BV, No BV=white, intermediate=grey and bv positive=maroon. Ids followed up in sebsequent visits are indicated with a grey stripe in the 'Followed id' annotation.   -->
-<!-- ```{r echo=FALSE} -->
-<!-- cat("\n") -->
-<!-- source("scripts/heatmap_function.R") -->
-
-<!-- top25 <- names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra), decreasing=T))[1:25] -->
-<!-- ps1.v1.cst.glom.Species.ra.top25 <- prune_taxa(top25, ps1.v1.cst.glom.Species.ra) -->
-
-<!-- taxa.order_ <- names(sort(taxa_sums(ps1.v1.cst.glom.Species.ra.top25))) -->
-
-<!-- ps2.v1v2v3.ids <- readRDS("results/v1v2v3-ids.txt") -->
-
-<!-- sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds <- 0 -->
-<!-- sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds[sample_data(ps1.v1.cst.glom.Species.ra.top25)$ParticipantID %in% ps2.v1v2v3.ids] <- 1 -->
-<!-- sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds <- factor(sample_data(ps1.v1.cst.glom.Species.ra.top25)$allVisitIds) -->
-
-<!-- sample.order <- rownames(sample_data(ps1.v1.cst.glom.Species.ra.top25)[order(get_variable(ps1.v1.cst.glom.Species.ra.top25, "sim_CST"), get_variable(ps1.v1.cst.glom.Species.ra.top25, "ShannonLgT"))]) -->
-
-<!-- hm <- plot_heatmap.2(ps1.v1.cst.glom.Species.ra.top25, taxa.label="Species", sample.order=sample.order, taxa.order=taxa.order_) -->
-<!-- hm <- hm + theme(axis.title.x = element_text(size=10), -->
-<!--     axis.title.y = element_text(size=10), -->
-<!--     axis.text.x = element_blank(), -->
-<!--     axis.text.y = element_text(size=7), -->
-<!--     plot.title = element_text(size=8), -->
-<!--     legend.text = element_text(size=7), -->
-<!--     legend.title = element_text(size=8), -->
-<!--     legend.key.width = unit(0.15, "in")) -->
-
-<!-- CSTColors <- brewer.pal(11,"Paired")[c(1,2,3,4,5,6,7,8,9,10,11)] # Length 5 for consistency with pre-revision CT+ coloration -->
-<!-- names(CSTColors) <- CSTs -->
-<!-- CSTColorScale <- scale_colour_manual(name = "CST", values = CSTColors[1:11]) -->
-<!-- CSTFillScale <- scale_fill_manual(name = "CST", breaks = CSTs_all, values = CSTsPalleteNamed) -->
-
-<!-- ### CHANGING SPECIES TO TAXA ON YLABEL -->
-<!-- labvec <- as(tax_table(ps1.v1.cst.glom.Species.ra.top25)[, "Species"], "character") -->
-<!-- names(labvec) <- taxa_names(ps1.v1.cst.glom.Species.ra.top25) -->
-<!-- labvec <- labvec[taxa.order] -->
-
-<!-- hm <- hm + scale_y_discrete("Taxa", labels = labvec) -->
-<!-- hm <- hm + theme(axis.title = element_text(size=10)) -->
-
-<!-- hcbdf <- data.frame(sample_data(ps1.v1.cst.glom.Species.ra.top25)) -->
-<!-- hcbdf <- hcbdf[sample.order,] #resolve -->
-<!-- hcbdf$index <- seq(1,nsamples(ps1.v1.cst.glom.Species.ra.top25)) -->
-<!-- hcb <- make_hcb(hcbdf, "sim_CST", name="CSTs", fillScale = CSTFillScale) -->
-<!-- hcb <- hcb + annotate("text", x=tapply(hcbdf$index, hcbdf[,"sim_CST",drop=T], mean), y=1, -->
-<!-- label=levels(hcbdf[,"sim_CST",drop=T]), size=2) -->
-<!-- followedIds <- make_hcb(hcbdf, "allVisitIds", name="Followed ID",  -->
-<!--                      fillScale = scale_fill_manual(values=c("0"="white", "1"="grey60"))) -->
-<!-- bvscores <- make_hcb(hcbdf, "bvscat", name="Nugent Score",  -->
-<!--                      fillScale = scale_fill_manual(name="BV Category", values=c("Negative"="white", "Intermediate"="grey60", "BV"="maroon"), guide = guide_legend(reverse = TRUE))) -->
-<!-- bvscores <- bvscores + theme(axis.text.y = element_text(size=8, face="bold", color="grey60")) -->
-<!-- Fig2 <- mush(hm, list(followedIds, bvscores, hcb)) -->
-<!-- grid.newpage() #unit.pmax from grid -->
-<!-- grid.draw(Fig2) -->
-
-<!-- #Distribution of BV accross CSTs -->
-<!-- cat("Distribution of BV accross CSTs") -->
-<!-- table(sample_data(ps1.v1.cst.glom.Species.ra.top25)$sim_CST, sample_data(ps1.v1.cst.glom.Species.ra.top25)$bvscat) -->
-<!-- ``` -->
-
-<!-- ## Plot Ordinations and Diversity Analyses -->
-
-<!-- ### Alpha Diversity -->
-
-<!-- Determine alpha diversity analysis -->
 ```{r alpha-diverstiy-plots, echo=FALSE, ,  fig.width= 8}
 
 
@@ -321,7 +231,10 @@ glm(formula = ShannonLgT ~ bvscat * Inflammation, data = sd.ps2.v1v2v3.glom.spec
 
 ## Betadiversity
 
-### By sequencing run
+### Batch effects - sequencing run
+
+Do we see any effect of sequencing run that can confound our analysis?
+
 ```{r}
 evals <- ord.ps2.v1v2v3.glom.species.ra.pcoa.bray$values$Eigenvalues
 p.pcoa.bray <- plot_ordination(ps2.v1v2v3.glom.species.ra, ord.ps2.v1v2v3.glom.species.ra.pcoa.bray, color = "SeqRun", axes = c(1,2)) +
@@ -335,6 +248,7 @@ p.pcoa.bray
 ```
 
 ### Do we see any clustering CSTs
+
 ```{r plot-ordination, echo=FALSE}
 
 # Plot the data by the treatment variable

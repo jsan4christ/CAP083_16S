@@ -27,6 +27,7 @@ options(scipen=2000) ##Penalty for scientific notation
 ```
 
 # Introduction
+
 The goals of this analysis are to:
 
 a) To identify community state types (CSTs) based on the composition and relative abundance of bacterial species
@@ -37,9 +38,11 @@ c) Compare genital cytokine concentrations with prevalent CSTs
 To answer these questions, 56 women with a laboratory-diagnosed sexually transmitted infection (STI)and/or BV-intermediate or positive at baseline, attended all subsequent visits (weeks 6 and 12), and had genital specimen stored to conduct the longitudinal microbiota and cytokine analysis were included. 16S rRNA gene sequencing and multiplex bead arrays were used to characterize the composition of vaginal microbial communities and soluble biomarkers of genital inflammation in cervicovaginal swabs and SoftCup fluids. Community state types were inferred using VALENCIA, a nearest centroid classification method for vaginal microbial communities based on composition. Linear regression analysis was used to compare genital cytokine concentrations with prevalent CSTs to test the hypothesis that vaginal microbiota dominated with non-Lactobacillus species would be associated with increased cytokine concentrations compared to communities dominated by Lactobacillus speciesPrincipal component analysis (PCA) was used to obtain summary measures for the multi-variable cytokine set and performed using the FactoMineR package (https://cran.r project.org/web/packages/FactoMineR/index.html) in R (www.r-project.org).
 
 ## Part A: Characterisation of female genital tract microbiome
+
 What is the distribution of bacteria in these women? is there any form of clustering?
 
 ## Key results
+
 Three major CSTs identified by VALENCIA
 
 * CST I dominated by Lactobacillus crispatus,
@@ -418,10 +421,6 @@ table(sample_data(ps2.v1v2v3)$STI, sample_data(ps2.v1v2v3)$VisitCode)
 cat("\n\nDistribution of inflammation accross visits:\n\n")
 table(sample_data(ps2.v1v2v3)$Inflammation, sample_data(ps2.v1v2v3)$VisitCode)
 ```
-
-## Alpha and Beta Diversity Analysis
-
-Before, the third step (prevalence assessment and filtering), we will subset the data from visit 1 to proceed with so that we can see prevalence in just visit 1.
 
 ```{r child='alpha_n_beta_div.Rmd'}
 ## Begin alpha and beta diversity analysis
